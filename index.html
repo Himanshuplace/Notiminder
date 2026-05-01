@@ -156,6 +156,7 @@ main{display:grid;gap:18px}
 }
 .time-dial{
   --dial-angle:180deg;
+  --readout-size:96px;
   position:relative;
   width:170px;
   aspect-ratio:1;
@@ -181,47 +182,51 @@ main{display:grid;gap:18px}
   transform:translate(-50%,-50%);
   border-radius:50%;
   background:var(--accent);
+  z-index:4;
 }
 .dial-hand{
   position:absolute;
   inset:0;
   transform:rotate(var(--dial-angle));
   transition:transform .34s cubic-bezier(.2,.85,.2,1);
+  z-index:1;
 }
 .dial-hand::before{
   content:"";
   position:absolute;
   left:calc(50% - 2px);
-  top:20%;
+  top:14%;
   width:4px;
-  height:31%;
+  height:28%;
   border-radius:999px;
   background:var(--accent);
 }
 .dial-readout{
-  position:absolute;
-  inset:0;
-  display:grid;
-  place-items:center;
-  pointer-events:none;
+  display:block;
   text-align:center;
 }
+.dial-readout > span{margin-top:0}
 .dial-readout strong{
   display:block;
-  font-size:33px;
+  font-size:30px;
   line-height:1;
   font-weight:800;
   letter-spacing:0;
 }
 .dial-readout span{
   display:block;
-  margin-top:7px;
+  margin-top:6px;
   color:var(--muted);
-  font-size:12px;
+  font-size:11px;
   font-weight:650;
 }
 .dial-sweep,.dial-hub,.dial-number{display:none}
-.dial-side{min-width:0}
+.dial-side{
+  min-width:0;
+  display:grid;
+  gap:8px;
+  align-content:center;
+}
 .mini-stat{
   color:var(--muted);
   font-size:14px;
@@ -603,8 +608,9 @@ select{min-width:122px}
   .permission-copy span{display:none}
   .permission-btn{padding-right:10px}
   .dial-row{grid-template-columns:142px 1fr;gap:12px}
-  .time-dial{width:142px}
-  .dial-readout strong{font-size:28px}
+  .time-dial{width:142px;--readout-size:82px}
+  .dial-readout strong{font-size:27px}
+  .dial-readout span{font-size:11px;margin-top:5px}
   .mode-tabs{grid-template-columns:repeat(3,1fr)}
   .mode-tab{font-size:12px}
   .composer-actions{grid-template-columns:1fr}
@@ -661,14 +667,14 @@ select{min-width:122px}
             <span class="dial-number n15">15</span>
             <span class="dial-number n30">30</span>
             <span class="dial-number n45">45</span>
+          </button>
+          <div class="dial-side">
             <span class="dial-readout">
               <span>
                 <strong id="dialMain">30m</strong>
                 <span id="dialSub">Every 30 minutes</span>
               </span>
             </span>
-          </button>
-          <div class="dial-side">
             <div class="mini-stat">
               <strong id="nextMini">No reminders</strong>
               <span>next alert</span>
@@ -1070,6 +1076,15 @@ function formatClock(minutes){
   const h12 = h24 % 12 || 12;
   return h12 + ":" + pad(mins) + " " + suffix;
 }
+function clockParts(minutes){
+  const normalized = ((minutes % 1440) + 1440) % 1440;
+  const h24 = Math.floor(normalized / 60);
+  const mins = normalized % 60;
+  return {
+    time: (h24 % 12 || 12) + ":" + pad(mins),
+    period: h24 >= 12 ? "PM" : "AM"
+  };
+}
 function timeMs(value){ return parseTime(value) * 60000; }
 function intervalMs(reminder){
   const value = clampNumber(reminder.iv, 1, 9999, 30);
@@ -1230,9 +1245,10 @@ function updateDial(){
   }
   if(currentMode === "specific"){
     dialMinutes = parseTime(els.specificTime.value || "09:00");
+    const parts = clockParts(dialMinutes);
     angle = (dialMinutes % 720) / 720 * 360;
-    main = formatClock(dialMinutes);
-    sub = "Daily";
+    main = parts.time;
+    sub = parts.period + " daily";
     valueNow = dialMinutes;
     valueMax = 1439;
   }
