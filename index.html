@@ -31,6 +31,11 @@
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;
   --mono:"SFMono-Regular",Consolas,monospace;
 }
+:root[data-theme="light"]{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
+:root[data-theme="dark"]{
+  --bg:#000000;--surface:#1c1c1e;--surface-2:#2c2c2e;--surface-3:#3a3a3c;--text:#f5f5f7;--muted:#a8a8ad;--faint:#6f737a;--line:rgba(255,255,255,.12);--accent:#0a84ff;--accent-2:#5aa7ff;--shadow:none;
+}
 
 @media (prefers-color-scheme:dark){
   :root{
@@ -278,14 +283,17 @@ main{display:grid;gap:18px}
 .text-field::placeholder{color:var(--faint)}
 
 .mode-tabs{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
+  display:flex;
+  overflow:auto;
+  scrollbar-width:none;
   gap:4px;
   padding:4px;
   border-radius:18px;
   background:var(--surface-2);
 }
+.mode-tabs::-webkit-scrollbar{display:none}
 .mode-tab{
+  flex:1 0 96px;
   min-width:0;
   min-height:42px;
   border:0;
@@ -611,8 +619,7 @@ select{min-width:122px}
   .time-dial{width:142px;--readout-size:82px}
   .dial-readout strong{font-size:27px}
   .dial-readout span{font-size:11px;margin-top:5px}
-  .mode-tabs{grid-template-columns:repeat(3,1fr)}
-  .mode-tab{font-size:12px}
+  .mode-tab{font-size:12px;flex-basis:84px}
   .composer-actions{grid-template-columns:1fr}
   .summary{padding:14px 16px}
 }
@@ -780,6 +787,26 @@ select{min-width:122px}
     </section>
 
     <section>
+      <h2 class="section-title">Experience</h2>
+      <div class="group composer">
+        <div class="config active">
+          <span class="field-label">Theme</span>
+          <select id="themeSelect" aria-label="Theme">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+          <span class="field-label">Sound</span>
+          <select id="soundSelect" aria-label="Notification sound">
+            <option value="chime">Chime</option>
+            <option value="ding">Ding</option>
+            <option value="silent">Silent</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section>
       <h2 class="section-title">Reminders</h2>
       <div class="group list-panel" aria-label="Active reminders">
         <div class="list-head">
@@ -817,8 +844,10 @@ select{min-width:122px}
 </div>
 
 <script>
-const STORAGE_KEY = "notiminder-v2";
+const STORAGE_KEY = "notiminder-v3";
 const OLD_STORAGE_KEY = "remindme-v4";
+const LEGACY_STORAGE_KEYS = ["notiminder-v2", OLD_STORAGE_KEY];
+const PREFS_KEY = "notiminder-prefs-v1";
 
 const els = {
   notifyBtn: document.getElementById("notifyBtn"),
@@ -853,7 +882,9 @@ const els = {
   randomEnd: document.getElementById("randomEnd"),
   periodCount: document.getElementById("periodCount"),
   periodDuration: document.getElementById("periodDuration"),
-  periodUnit: document.getElementById("periodUnit")
+  periodUnit: document.getElementById("periodUnit"),
+  themeSelect: document.getElementById("themeSelect"),
+  soundSelect: document.getElementById("soundSelect")
 };
 
 let reminders = [];
@@ -863,6 +894,7 @@ let toastTimer = 0;
 let swRegistration = null;
 let deferredInstallPrompt = null;
 let tickLocked = false;
+let prefs = { theme:"system", sound:"chime" };
 
 const icons = {
   play: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>',
@@ -909,6 +941,10 @@ function updateNotificationUI(){
   else if(state === "unsupported") els.notifyState.textContent = "Unavailable";
   else if(state === "insecure") els.notifyState.textContent = "Needs HTTPS";
   else els.notifyState.textContent = "Allow";
+  if(!("onbeforeinstallprompt" in window) && /iPad|iPhone|iPod/.test(navigator.userAgent)){
+    els.installBtn.classList.remove("hidden");
+    els.installBtn.title = "Use Share > Add to Home Screen";
+  }
 }
 
 async function requestNativeNotifications(){
@@ -982,9 +1018,27 @@ function showToast(title, body){
 function hideToast(){ els.toast.classList.add("hidden"); }
 function storeRead(key){ try{return localStorage.getItem(key);}catch(err){return null;} }
 function storeWrite(key,value){ try{localStorage.setItem(key,value);}catch(err){} }
+function loadPrefs(){
+  try{
+    const raw = storeRead(PREFS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    prefs.theme = ["system","light","dark"].includes(parsed.theme) ? parsed.theme : "system";
+    prefs.sound = ["chime","ding","silent"].includes(parsed.sound) ? parsed.sound : "chime";
+  }catch(err){}
+}
+function savePrefs(){ storeWrite(PREFS_KEY, JSON.stringify(prefs)); }
+function applyTheme(){
+  document.documentElement.dataset.theme = prefs.theme;
+}
 
 async function loadReminders(){
-  let raw = storeRead(STORAGE_KEY) || storeRead(OLD_STORAGE_KEY);
+  let raw = storeRead(STORAGE_KEY);
+  if(!raw){
+    for(const key of LEGACY_STORAGE_KEYS){
+      raw = storeRead(key);
+      if(raw) break;
+    }
+  }
   if(!raw && window.storage && window.storage.get){
     try{
       const old = await window.storage.get(OLD_STORAGE_KEY);
@@ -1361,6 +1415,7 @@ function updateCountdowns(){
   });
 }
 function chime(){
+  if(prefs.sound === "silent") return;
   try{
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if(!AudioCtx) return;
@@ -1371,7 +1426,7 @@ function chime(){
       oscillator.connect(gain);
       gain.connect(ctx.destination);
       oscillator.type = "sine";
-      oscillator.frequency.value = frequency;
+      oscillator.frequency.value = prefs.sound === "ding" ? 880 : frequency;
       const start = ctx.currentTime + index * .13;
       gain.gain.setValueAtTime(.001, start);
       gain.gain.exponentialRampToValueAtTime(.16, start + .04);
@@ -1449,6 +1504,15 @@ function setupEvents(){
     await fireReminder(currentFormReminder(), true);
   });
   els.notifyBtn.addEventListener("click", requestNativeNotifications);
+  els.themeSelect.addEventListener("change", () => {
+    prefs.theme = els.themeSelect.value;
+    applyTheme();
+    savePrefs();
+  });
+  els.soundSelect.addEventListener("change", () => {
+    prefs.sound = els.soundSelect.value;
+    savePrefs();
+  });
   els.clearBtn.addEventListener("click", clearReminders);
   els.toastClose.addEventListener("click", hideToast);
   els.ampmGroup.addEventListener("click", event => {
@@ -1489,20 +1553,39 @@ function setupEvents(){
     els.installBtn.classList.remove("hidden");
   });
   els.installBtn.addEventListener("click", async () => {
-    if(!deferredInstallPrompt) return;
+    if(!deferredInstallPrompt){
+      showToast("Install tip", "On iOS Safari, use Share > Add to Home Screen.");
+      return;
+    }
     deferredInstallPrompt.prompt();
     await deferredInstallPrompt.userChoice;
     deferredInstallPrompt = null;
     els.installBtn.classList.add("hidden");
   });
+  window.addEventListener("appinstalled", () => {
+    showToast("Installed", "Notiminder is now on your device home screen.");
+    els.installBtn.classList.add("hidden");
+  });
+  window.addEventListener("beforeunload", saveReminders);
+  document.addEventListener("visibilitychange", () => {
+    if(document.visibilityState === "hidden"){
+      saveReminders();
+      savePrefs();
+    }
+  });
 }
 async function init(){
+  loadPrefs();
+  applyTheme();
+  els.themeSelect.value = prefs.theme;
+  els.soundSelect.value = prefs.sound;
   setupEvents();
   dialMinutes = parseTime(els.specificTime.value);
   updateDial();
   updateNotificationUI();
   await registerServiceWorker();
   await loadReminders();
+  setInterval(saveReminders, 15000);
   setInterval(tick, 1000);
 }
 init();
