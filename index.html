@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Notiminder</title>
-<meta name="theme-color" content="#101418">
+<meta name="theme-color" content="#f5f5f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Notiminder">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -12,27 +12,41 @@
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <style>
 :root{
-  --bg:#101418;
-  --bg-soft:#171d22;
-  --panel:#f7faf8;
-  --panel-2:#ffffff;
-  --ink:#101418;
-  --muted:#66737f;
-  --subtle:#9aa5ad;
-  --line:#dbe3df;
-  --line-dark:#273039;
-  --mint:#51dec0;
-  --mint-dark:#138d77;
-  --mint-soft:#e4faf4;
-  --blue:#4f93ff;
-  --blue-soft:#e9f1ff;
-  --coral:#ff766d;
-  --coral-soft:#fff0ee;
-  --amber:#e7a923;
-  --shadow:0 28px 80px rgba(0,0,0,.22);
-  --radius:8px;
-  --font:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --mono:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  color-scheme:light dark;
+  --bg:#f5f5f7;
+  --surface:#ffffff;
+  --surface-2:#eeeeef;
+  --surface-3:#e5e5ea;
+  --text:#111114;
+  --muted:#6f737a;
+  --faint:#9ca0a6;
+  --line:rgba(60,60,67,.14);
+  --accent:#007aff;
+  --accent-2:#2f8cff;
+  --green:#34c759;
+  --red:#ff3b30;
+  --shadow:0 16px 44px rgba(0,0,0,.08);
+  --radius:28px;
+  --radius-sm:18px;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"SFMono-Regular",Consolas,monospace;
+}
+
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#000000;
+    --surface:#1c1c1e;
+    --surface-2:#2c2c2e;
+    --surface-3:#3a3a3c;
+    --text:#f5f5f7;
+    --muted:#a8a8ad;
+    --faint:#6f737a;
+    --line:rgba(255,255,255,.12);
+    --accent:#0a84ff;
+    --accent-2:#5aa7ff;
+    --shadow:none;
+  }
+  .reminder-row:not(.off) .tag{color:#b8b8be}
 }
 
 *{box-sizing:border-box}
@@ -40,688 +54,561 @@ html{min-height:100%;background:var(--bg)}
 body{
   margin:0;
   min-height:100vh;
+  background:var(--bg);
+  color:var(--text);
   font-family:var(--font);
-  color:#ecf4f0;
-  background:
-    radial-gradient(circle at 12% 0%, rgba(81,222,192,.16), transparent 34rem),
-    linear-gradient(145deg,#101418 0%,#151b20 44%,#0d1115 100%);
   letter-spacing:0;
 }
 button,input,select,textarea{font:inherit}
-button{cursor:pointer}
-button:disabled{cursor:not-allowed;opacity:.55}
+button{cursor:pointer;color:inherit}
 svg{display:block}
+.hidden{display:none!important}
 
 .app-frame{
-  width:min(1180px,100%);
+  width:min(100%,560px);
   margin:0 auto;
-  padding:18px 18px max(24px,env(safe-area-inset-bottom));
+  padding:18px 16px max(30px,env(safe-area-inset-bottom));
 }
 
 .topbar{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:16px;
-  min-height:66px;
-}
-.brand{
-  display:flex;
-  align-items:center;
   gap:12px;
-  min-width:0;
+  padding:4px 2px 18px;
 }
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
 .brand-mark{
-  width:44px;
-  height:44px;
+  width:42px;
+  height:42px;
+  border-radius:14px;
   display:grid;
   place-items:center;
-  border:1px solid rgba(81,222,192,.36);
-  border-radius:8px;
-  background:linear-gradient(150deg,rgba(81,222,192,.22),rgba(255,255,255,.05));
-  color:var(--mint);
-  box-shadow:0 10px 32px rgba(81,222,192,.18);
+  color:#fff;
+  background:linear-gradient(150deg,var(--accent),#68c6ff);
+  box-shadow:0 10px 28px rgba(0,122,255,.28);
 }
 .brand h1{
   margin:0;
-  font-size:clamp(24px,3vw,34px);
-  line-height:1;
-  font-weight:760;
+  font-size:34px;
+  line-height:1.05;
+  font-weight:780;
   letter-spacing:0;
 }
-.brand p{
-  margin:5px 0 0;
-  color:#a9b8b2;
-  font-size:13px;
+.brand p{display:none}
+.top-actions{display:flex;align-items:center;gap:8px}
+.install-btn,
+.permission-btn{
+  border:0;
+  min-height:42px;
+  border-radius:999px;
+  background:var(--surface);
+  color:var(--text);
+  box-shadow:var(--shadow);
+  border:1px solid var(--line);
 }
-.top-actions{
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  gap:10px;
-}
-.permission-btn,
 .install-btn{
-  min-height:50px;
-  border:1px solid rgba(255,255,255,.13);
-  border-radius:8px;
-  background:rgba(255,255,255,.07);
-  color:#f8fffc;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:8px 12px;
-  box-shadow:0 12px 35px rgba(0,0,0,.18);
-  transition:transform .18s ease,border-color .18s ease,background .18s ease;
-}
-.permission-btn:hover,
-.install-btn:hover{transform:translateY(-1px);border-color:rgba(81,222,192,.45);background:rgba(255,255,255,.1)}
-.permission-icon{
-  width:34px;
-  height:34px;
+  width:42px;
   display:grid;
   place-items:center;
-  color:var(--mint);
-  border-radius:8px;
-  background:rgba(81,222,192,.13);
 }
-.permission-copy{
+.permission-btn{
   display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  line-height:1.1;
-  white-space:nowrap;
-}
-.permission-copy span{font-size:12px;color:#b5c2bd}
-.permission-copy strong{margin-top:3px;font-size:15px;color:var(--mint);font-weight:760}
-.install-btn{width:50px;justify-content:center;padding:0;color:#dfe9e4}
-.hidden{display:none!important}
-
-.hero-panel{
-  display:grid;
-  grid-template-columns:minmax(280px,.88fr) minmax(360px,1.35fr);
-  gap:24px;
-  padding:24px;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:8px;
-  background:linear-gradient(145deg,rgba(255,255,255,.1),rgba(255,255,255,.045));
-  box-shadow:var(--shadow);
-  overflow:hidden;
-}
-
-.dial-zone{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
   align-items:center;
-  justify-content:center;
+  gap:8px;
+  padding:6px 12px 6px 8px;
+}
+.permission-icon{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  color:#fff;
+  background:var(--green);
+}
+.permission-copy{display:flex;flex-direction:column;align-items:flex-start;line-height:1.05}
+.permission-copy span{font-size:11px;color:var(--muted);font-weight:590}
+.permission-copy strong{margin-top:2px;font-size:13px;color:var(--green);font-weight:760}
+
+main{display:grid;gap:18px}
+.section-title{
+  margin:0 2px 8px;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:700;
+  text-transform:uppercase;
+}
+.group{
+  overflow:hidden;
+  border-radius:var(--radius);
+  background:var(--surface);
+  box-shadow:var(--shadow);
+  border:1px solid var(--line);
+}
+.composer{padding:18px;display:grid;gap:16px}
+
+.dial-row{
+  display:grid;
+  grid-template-columns:170px 1fr;
   gap:18px;
+  align-items:center;
 }
 .time-dial{
   --dial-angle:180deg;
-  width:min(100%,386px);
-  aspect-ratio:1;
   position:relative;
+  width:170px;
+  aspect-ratio:1;
   border:0;
   border-radius:50%;
   padding:0;
-  color:#f6fffb;
   background:
-    radial-gradient(circle at 50% 50%,#192229 0 42%,transparent 43%),
-    repeating-conic-gradient(from 0deg,rgba(255,255,255,.85) 0deg 1.4deg,transparent 1.4deg 6deg),
-    conic-gradient(from 0deg,rgba(81,222,192,.55),rgba(79,147,255,.18),rgba(255,118,109,.18),rgba(81,222,192,.55));
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),inset 0 0 60px rgba(81,222,192,.16),0 32px 70px rgba(0,0,0,.32);
-  isolation:isolate;
+    radial-gradient(circle at center,var(--surface) 0 57%,transparent 58%),
+    conic-gradient(var(--accent) 0 var(--dial-angle),var(--surface-3) var(--dial-angle) 360deg);
+  box-shadow:inset 0 0 0 1px var(--line),0 8px 26px rgba(0,122,255,.12);
   touch-action:none;
-  transition:transform .22s ease,box-shadow .22s ease;
+  transition:transform .18s ease;
 }
-.time-dial::before{
+.time-dial:active{transform:scale(.985)}
+.time-dial:focus-visible{outline:4px solid color-mix(in srgb,var(--accent) 24%,transparent);outline-offset:4px}
+.time-dial::after{
   content:"";
   position:absolute;
-  inset:7%;
-  z-index:-1;
+  left:50%;
+  top:50%;
+  width:12px;
+  height:12px;
+  transform:translate(-50%,-50%);
   border-radius:50%;
-  background:radial-gradient(circle at 50% 50%,#101820 0 59%,rgba(81,222,192,.08) 60% 100%);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);
-}
-.time-dial:focus-visible{outline:3px solid rgba(81,222,192,.45);outline-offset:5px}
-.time-dial:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16),inset 0 0 70px rgba(81,222,192,.2),0 36px 80px rgba(0,0,0,.36)}
-.dial-sweep{
-  position:absolute;
-  inset:4%;
-  border-radius:50%;
-  background:conic-gradient(from var(--dial-angle),rgba(81,222,192,.34),transparent 54deg);
-  filter:blur(6px);
-  opacity:.7;
-  animation:sweepGlow 4.8s ease-in-out infinite;
+  background:var(--accent);
 }
 .dial-hand{
   position:absolute;
   inset:0;
   transform:rotate(var(--dial-angle));
-  transition:transform .5s cubic-bezier(.2,.9,.2,1);
+  transition:transform .34s cubic-bezier(.2,.85,.2,1);
 }
 .dial-hand::before{
   content:"";
   position:absolute;
-  left:calc(50% - 4px);
-  top:19%;
-  width:8px;
-  height:32%;
+  left:calc(50% - 2px);
+  top:20%;
+  width:4px;
+  height:31%;
   border-radius:999px;
-  background:linear-gradient(180deg,#79ffe2,#34d8ba);
-  transform-origin:50% 100%;
-  box-shadow:0 0 18px rgba(81,222,192,.6);
-}
-.dial-hub{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:34px;
-  height:34px;
-  transform:translate(-50%,-50%);
-  border-radius:50%;
-  background:#51dec0;
-  border:8px solid rgba(255,255,255,.18);
-  box-shadow:0 0 0 1px rgba(81,222,192,.45),0 0 26px rgba(81,222,192,.48);
+  background:var(--accent);
 }
 .dial-readout{
   position:absolute;
   inset:0;
   display:grid;
   place-items:center;
-  text-align:center;
   pointer-events:none;
+  text-align:center;
 }
 .dial-readout strong{
   display:block;
-  color:#fbfffd;
-  font-size:clamp(38px,5vw,62px);
-  line-height:.96;
-  font-weight:760;
+  font-size:33px;
+  line-height:1;
+  font-weight:800;
   letter-spacing:0;
 }
 .dial-readout span{
   display:block;
-  margin-top:10px;
-  color:var(--mint);
-  font-size:15px;
-  font-weight:720;
-}
-.dial-number{
-  position:absolute;
-  color:rgba(255,255,255,.82);
-  font-size:15px;
-  font-family:var(--mono);
-  font-weight:700;
-}
-.dial-number.n0{left:50%;top:9%;transform:translateX(-50%)}
-.dial-number.n15{right:11%;top:50%;transform:translateY(-50%)}
-.dial-number.n30{left:50%;bottom:9%;transform:translateX(-50%)}
-.dial-number.n45{left:11%;top:50%;transform:translateY(-50%)}
-.dial-footer{
-  width:min(100%,386px);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-}
-.mini-stat{
-  min-width:0;
-  color:#aebcb6;
+  margin-top:7px;
+  color:var(--muted);
   font-size:12px;
+  font-weight:650;
+}
+.dial-sweep,.dial-hub,.dial-number{display:none}
+.dial-side{min-width:0}
+.mini-stat{
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.35;
 }
 .mini-stat strong{
   display:block;
-  margin-bottom:2px;
-  color:#f7fffb;
-  font-size:16px;
+  color:var(--text);
+  font-size:19px;
+  margin-bottom:3px;
 }
 .ampm{
-  display:flex;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:8px;
-  overflow:hidden;
+  display:inline-grid;
+  grid-template-columns:1fr 1fr;
+  margin-top:14px;
+  padding:3px;
+  border-radius:999px;
+  background:var(--surface-2);
 }
 .ampm button{
-  min-width:48px;
+  min-width:54px;
+  height:34px;
   border:0;
-  color:#afbbb7;
-  background:rgba(255,255,255,.05);
-  padding:9px 10px;
-  font-size:12px;
+  border-radius:999px;
+  background:transparent;
+  color:var(--muted);
+  font-size:13px;
   font-weight:760;
 }
-.ampm button.active{color:#101418;background:var(--mint)}
-
-.composer-zone{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  gap:16px;
+.ampm button.active{
+  background:var(--surface);
+  color:var(--accent);
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
 }
-.mode-tabs{
-  display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:8px;
-  overflow:hidden;
-  background:rgba(9,13,17,.18);
-}
-.mode-tab{
-  min-height:58px;
-  border:0;
-  border-right:1px solid rgba(255,255,255,.12);
-  background:transparent;
-  color:#d9e4df;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:9px;
-  padding:10px;
-  font-size:14px;
-  font-weight:720;
-  transition:background .18s ease,color .18s ease;
-}
-.mode-tab:last-child{border-right:0}
-.mode-tab.active{background:rgba(81,222,192,.14);color:var(--mint);box-shadow:inset 0 0 0 1px rgba(81,222,192,.35)}
-.mode-tab:hover{background:rgba(255,255,255,.07)}
 
 .text-field{
   width:100%;
-  min-height:108px;
-  resize:vertical;
-  border:1px solid rgba(255,255,255,.15);
-  border-radius:8px;
-  background:rgba(7,11,15,.3);
-  color:#fbfffd;
+  min-height:58px;
+  resize:none;
+  border:0;
   outline:none;
-  padding:18px 18px;
-  font-size:19px;
+  border-radius:20px;
+  background:var(--surface-2);
+  color:var(--text);
+  padding:17px 18px;
+  font-size:17px;
   line-height:1.35;
-  transition:border-color .18s ease,background .18s ease;
 }
-.text-field::placeholder{color:#7e8c86}
-.text-field:focus{border-color:rgba(81,222,192,.65);background:rgba(7,11,15,.42)}
+.text-field::placeholder{color:var(--faint)}
 
-.option-grid{
+.mode-tabs{
   display:grid;
-  grid-template-columns:1fr;
-  gap:10px;
+  grid-template-columns:repeat(5,1fr);
+  gap:4px;
+  padding:4px;
+  border-radius:18px;
+  background:var(--surface-2);
 }
+.mode-tab{
+  min-width:0;
+  min-height:42px;
+  border:0;
+  border-radius:14px;
+  background:transparent;
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  padding:0 6px;
+  font-size:13px;
+  font-weight:720;
+}
+.mode-tab svg{width:16px;height:16px}
+.mode-tab.active{
+  background:var(--surface);
+  color:var(--accent);
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+.option-grid{display:grid}
 .config{
   display:none;
   align-items:center;
   flex-wrap:wrap;
-  gap:10px;
-  min-height:64px;
-  border:1px solid rgba(255,255,255,.13);
-  border-radius:8px;
-  background:rgba(7,11,15,.24);
-  padding:12px;
+  gap:9px;
+  min-height:52px;
+  padding:12px 14px;
+  border-radius:20px;
+  background:var(--surface-2);
 }
-.config.active{display:flex;animation:fadeUp .22s ease both}
+.config.active{display:flex;animation:softIn .18s ease both}
 .field-label{
-  color:#b4c1bb;
-  font-size:13px;
-  font-weight:690;
-}
-input[type=text],
-input[type=number],
-input[type=time],
-select{
-  height:42px;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:8px;
-  background:rgba(255,255,255,.08);
-  color:#f9fffc;
-  outline:none;
-  padding:0 12px;
+  color:var(--muted);
   font-size:14px;
   font-weight:680;
-  transition:border-color .18s ease,background .18s ease;
 }
-input[type=number]{width:86px;text-align:center}
-input[type=time]{width:132px}
-select{min-width:128px}
-input:focus,select:focus{border-color:rgba(81,222,192,.6);background:rgba(255,255,255,.11)}
-select option{background:#151b20;color:#f7fffb}
+input[type=number],input[type=time],select{
+  height:38px;
+  border:0;
+  outline:none;
+  border-radius:14px;
+  background:var(--surface);
+  color:var(--text);
+  padding:0 12px;
+  font-size:15px;
+  font-weight:680;
+  border:1px solid var(--line);
+}
+input[type=number]{width:84px;text-align:center}
+input[type=time]{width:128px}
+select{min-width:122px}
 
 .composer-actions{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  justify-content:space-between;
-}
-.add-btn{
-  min-height:58px;
-  flex:1;
-  border:0;
-  border-radius:8px;
-  background:linear-gradient(135deg,#78ffe3,#38d6b7);
-  color:#07110f;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  display:grid;
+  grid-template-columns:1fr 1.4fr;
   gap:10px;
-  padding:0 22px;
-  font-size:17px;
-  font-weight:830;
-  box-shadow:0 18px 46px rgba(81,222,192,.25);
-  transition:transform .16s ease,box-shadow .16s ease,filter .16s ease;
 }
-.add-btn:hover{transform:translateY(-1px);box-shadow:0 22px 54px rgba(81,222,192,.3);filter:saturate(1.04)}
-.add-btn:active{transform:translateY(0) scale(.99)}
-.ghost-btn{
-  min-height:44px;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:8px;
-  background:rgba(255,255,255,.06);
-  color:#d9e5df;
+.ghost-btn,.add-btn,.tool-btn{
+  border:0;
+  border-radius:18px;
   display:flex;
   align-items:center;
   justify-content:center;
   gap:8px;
-  padding:0 14px;
-  font-size:13px;
-  font-weight:740;
+  font-weight:760;
 }
-.ghost-btn:hover{border-color:rgba(81,222,192,.45);color:#ffffff}
+.ghost-btn{
+  min-height:50px;
+  background:var(--surface-2);
+  color:var(--accent);
+  font-size:14px;
+}
+.add-btn{
+  min-height:50px;
+  background:var(--accent);
+  color:#fff;
+  font-size:16px;
+  box-shadow:0 10px 26px rgba(0,122,255,.25);
+}
+.add-btn:active,.ghost-btn:active,.tool-btn:active,.mode-tab:active{transform:scale(.985)}
 
-.stats-row{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:10px;
-  margin:12px 0;
-}
-.stat{
-  min-height:96px;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:8px;
-  background:rgba(255,255,255,.07);
-  padding:16px;
-  display:flex;
-  align-items:center;
-  gap:13px;
-}
-.stat-icon{
-  width:42px;
-  height:42px;
-  display:grid;
-  place-items:center;
-  border-radius:8px;
-  color:var(--mint);
-  background:rgba(81,222,192,.13);
-  flex:0 0 auto;
-}
-.stat.blue .stat-icon{color:var(--blue);background:rgba(79,147,255,.13)}
-.stat.coral .stat-icon{color:var(--coral);background:rgba(255,118,109,.13)}
-.stat strong{
-  display:block;
-  color:#fbfffd;
-  font-size:25px;
-  line-height:1;
-}
-.stat-copy{
-  min-width:0;
-}
-.stat-copy span{
-  display:block;
-  margin-top:5px;
-  color:#aebcb6;
-  font-size:13px;
-}
-
-.list-panel{
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:8px;
-  background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.055));
-  box-shadow:0 22px 60px rgba(0,0,0,.18);
-  overflow:hidden;
-}
-.list-head{
-  min-height:62px;
+.summary{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:12px;
-  padding:0 18px;
-  border-bottom:1px solid rgba(255,255,255,.11);
+  padding:15px 18px;
+}
+.stat{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.stat-icon{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  color:#fff;
+  background:var(--accent);
+}
+.stat.coral .stat-icon{background:var(--red)}
+.stat.blue .stat-icon{background:var(--green)}
+.stat-copy{min-width:0}
+.stat strong{
+  display:block;
+  font-size:20px;
+  line-height:1;
+}
+.stat-copy span{
+  display:block;
+  margin-top:3px;
+  color:var(--muted);
+  font-size:12px;
+}
+.summary .stat:nth-child(2),
+.summary .stat:nth-child(3){display:none}
+
+.list-head{
+  min-height:54px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 16px;
+  border-bottom:1px solid var(--line);
 }
 .list-title{
   display:flex;
   align-items:center;
-  gap:10px;
-  font-weight:780;
-  font-size:18px;
+  gap:8px;
+  font-size:17px;
+  font-weight:760;
 }
 .count-chip{
-  min-width:30px;
-  height:30px;
+  min-width:24px;
+  height:24px;
   display:grid;
   place-items:center;
-  border-radius:8px;
-  background:rgba(81,222,192,.13);
-  color:var(--mint);
-  font-size:14px;
+  border-radius:999px;
+  background:var(--surface-2);
+  color:var(--muted);
+  font-size:12px;
   font-family:var(--mono);
+}
+.list-head .ghost-btn{
+  min-height:36px;
+  border-radius:999px;
+  padding:0 12px;
+  font-size:13px;
 }
 .reminder-list{display:grid}
 .reminder-row{
   display:grid;
-  grid-template-columns:6px 1fr auto auto auto;
+  grid-template-columns:1fr auto;
+  gap:12px;
   align-items:center;
-  gap:16px;
-  min-height:96px;
-  padding:14px 18px;
-  border-bottom:1px solid rgba(255,255,255,.09);
-  animation:rowIn .24s ease both;
+  min-height:82px;
+  padding:14px 16px;
+  border-bottom:1px solid var(--line);
+  animation:softIn .18s ease both;
 }
 .reminder-row:last-child{border-bottom:0}
-.reminder-row.firing{background:rgba(81,222,192,.12)}
-.accent-line{
-  width:6px;
-  height:58px;
-  border-radius:999px;
-  background:var(--mint);
-  box-shadow:0 0 20px rgba(81,222,192,.36);
-}
-.reminder-row[data-tone=blue] .accent-line{background:var(--blue);box-shadow:0 0 18px rgba(79,147,255,.35)}
-.reminder-row[data-tone=coral] .accent-line{background:var(--coral);box-shadow:0 0 18px rgba(255,118,109,.35)}
+.reminder-row.firing{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.accent-line{display:none}
 .reminder-main{min-width:0}
 .reminder-name{
-  color:#fbfffd;
+  color:var(--text);
   font-size:17px;
-  font-weight:790;
+  font-weight:720;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.reminder-row.off .reminder-name{color:#7f8c87}
+.reminder-row.off .reminder-name{color:var(--muted)}
 .reminder-meta{
   display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:9px;
-}
-.tag{
-  display:inline-flex;
   align-items:center;
   gap:6px;
-  min-height:26px;
-  border:1px solid rgba(81,222,192,.24);
-  border-radius:8px;
-  color:var(--mint);
-  background:rgba(81,222,192,.1);
-  padding:0 9px;
-  font-size:12px;
-  font-weight:760;
+  margin-top:5px;
+  min-width:0;
 }
-.tag.blue{border-color:rgba(79,147,255,.25);color:#8dbcff;background:rgba(79,147,255,.11)}
-.tag.coral{border-color:rgba(255,118,109,.25);color:#ff9c95;background:rgba(255,118,109,.11)}
+.tag{
+  color:var(--muted);
+  font-size:13px;
+  font-weight:560;
+  white-space:nowrap;
+}
+.reminder-row:not(.off) .tag{color:#5d636b}
+.tag.blue{display:none}
 .next-cell{
-  min-width:116px;
-  text-align:left;
+  grid-column:1;
+  color:var(--accent);
+  font-size:13px;
+  font-weight:650;
 }
 .next-cell strong{
-  display:block;
-  color:var(--mint);
-  font-size:20px;
-  line-height:1.05;
   font-family:var(--mono);
+  font-size:14px;
 }
 .next-cell span{
-  display:block;
-  margin-top:4px;
-  color:#a9b7b1;
-  font-size:12px;
+  color:var(--muted);
+  margin-left:6px;
 }
 .progress{
-  height:4px;
+  height:3px;
   border-radius:999px;
-  background:rgba(255,255,255,.12);
-  margin-top:11px;
+  background:var(--surface-3);
+  margin-top:10px;
   overflow:hidden;
 }
 .progress > i{
   display:block;
   width:100%;
   height:100%;
-  border-radius:999px;
-  background:linear-gradient(90deg,var(--mint),#87f4dd);
+  border-radius:inherit;
+  background:var(--accent);
   transition:width .7s linear;
 }
 .switch{
+  grid-column:2;
+  grid-row:1 / span 2;
   position:relative;
   width:52px;
-  height:30px;
+  height:32px;
   border:0;
   border-radius:999px;
-  background:#43505a;
+  background:var(--surface-3);
   padding:0;
-  transition:background .18s ease;
 }
 .switch::after{
   content:"";
   position:absolute;
-  width:24px;
-  height:24px;
-  top:3px;
-  left:3px;
+  width:28px;
+  height:28px;
+  top:2px;
+  left:2px;
   border-radius:50%;
-  background:#ffffff;
-  box-shadow:0 3px 12px rgba(0,0,0,.25);
+  background:#fff;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
   transition:transform .18s ease;
 }
-.switch.on{background:var(--mint)}
-.switch.on::after{transform:translateX(22px)}
+.switch.on{background:var(--green)}
+.switch.on::after{transform:translateX(20px)}
 .row-tools{
+  grid-column:1 / -1;
   display:flex;
-  align-items:center;
   gap:8px;
+  margin-top:2px;
 }
 .tool-btn{
-  min-width:42px;
-  height:42px;
-  border:1px solid rgba(255,255,255,.13);
-  border-radius:8px;
-  background:rgba(255,255,255,.06);
-  color:#dfe8e3;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:7px;
-  padding:0 11px;
+  min-height:36px;
+  padding:0 12px;
+  background:var(--surface-2);
+  color:var(--accent);
   font-size:13px;
-  font-weight:760;
 }
-.tool-btn:hover{border-color:rgba(81,222,192,.45);color:#ffffff}
-.tool-btn.delete{color:#ff9c95}
-.tool-btn.delete:hover{border-color:rgba(255,118,109,.5);background:rgba(255,118,109,.12)}
+.tool-btn.delete{color:var(--red)}
 
 .empty{
-  min-height:250px;
+  min-height:160px;
   display:grid;
   place-items:center;
+  padding:28px;
+  color:var(--muted);
   text-align:center;
-  padding:36px 20px;
-  color:#9aa8a2;
 }
-.empty svg{margin:0 auto 16px;color:var(--mint)}
-.empty strong{display:block;color:#f7fffb;font-size:19px;margin-bottom:6px}
+.empty svg{margin:0 auto 12px;color:var(--accent)}
+.empty strong{display:block;color:var(--text);font-size:17px;margin-bottom:4px}
 .empty span{font-size:14px}
 
 .toast{
   position:fixed;
   left:50%;
-  top:18px;
+  top:max(16px,env(safe-area-inset-top));
   z-index:50;
   width:min(420px,calc(100vw - 28px));
   transform:translateX(-50%);
-  border:1px solid rgba(81,222,192,.45);
-  border-radius:8px;
-  background:#101820;
-  color:#f7fffb;
-  box-shadow:0 24px 80px rgba(0,0,0,.38);
-  padding:14px 16px;
+  border-radius:22px;
+  background:color-mix(in srgb,var(--surface) 88%,transparent);
+  color:var(--text);
+  box-shadow:0 18px 50px rgba(0,0,0,.16);
+  border:1px solid var(--line);
+  backdrop-filter:blur(18px);
+  padding:12px;
   display:flex;
   align-items:center;
-  gap:12px;
-  animation:toastIn .25s ease both;
+  gap:10px;
+  animation:toastIn .22s ease both;
 }
 .toast strong{display:block;font-size:14px}
-.toast span{display:block;margin-top:3px;color:#aab9b3;font-size:12px}
+.toast span{display:block;margin-top:2px;color:var(--muted);font-size:12px}
 .toast button{
   margin-left:auto;
+  border:0;
   width:30px;
   height:30px;
-  border:0;
-  border-radius:8px;
-  background:rgba(255,255,255,.08);
-  color:#f7fffb;
+  border-radius:50%;
+  background:var(--surface-2);
 }
 
-@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes rowIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes softIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 @keyframes toastIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
-@keyframes sweepGlow{0%,100%{opacity:.55}50%{opacity:.95}}
-
 @media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 
-@media (max-width:920px){
-  .hero-panel{grid-template-columns:1fr;padding:18px}
-  .mode-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .mode-tab:nth-child(2n){border-right:0}
-  .mode-tab:nth-child(5){grid-column:1/-1;border-top:1px solid rgba(255,255,255,.12)}
-  .stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .reminder-row{grid-template-columns:5px 1fr auto;gap:12px}
-  .next-cell{grid-column:2;min-width:0}
-  .row-tools{grid-column:2/-1;justify-content:flex-start}
+@media (min-width:820px){
+  .app-frame{width:min(100%,720px);padding-top:28px}
+  .brand h1{font-size:38px}
 }
 
-@media (max-width:620px){
-  .app-frame{padding:12px 10px 18px}
-  .topbar{align-items:flex-start}
-  .brand p{display:none}
+@media (max-width:460px){
+  .app-frame{padding:14px 10px max(20px,env(safe-area-inset-bottom))}
+  .brand h1{font-size:28px}
+  .brand-mark{width:38px;height:38px;border-radius:13px}
   .permission-copy span{display:none}
-  .permission-copy strong{font-size:13px}
-  .permission-btn{min-height:44px;padding:6px 9px}
-  .permission-icon{width:30px;height:30px}
-  .install-btn{width:44px;height:44px;min-height:44px}
-  .hero-panel{gap:16px;padding:14px}
-  .time-dial{width:min(100%,320px)}
-  .dial-readout strong{font-size:42px}
-  .text-field{min-height:92px;font-size:16px}
-  .composer-actions{flex-direction:column;align-items:stretch}
-  .stats-row{grid-template-columns:1fr}
-  .stat{min-height:76px}
-  .list-head{padding:0 12px}
-  .reminder-row{padding:14px 12px;grid-template-columns:5px 1fr auto}
-  .reminder-name{font-size:16px}
-  .tool-btn span{display:none}
+  .permission-btn{padding-right:10px}
+  .dial-row{grid-template-columns:142px 1fr;gap:12px}
+  .time-dial{width:142px}
+  .dial-readout strong{font-size:28px}
+  .mode-tabs{grid-template-columns:repeat(3,1fr)}
+  .mode-tab{font-size:12px}
+  .composer-actions{grid-template-columns:1fr}
+  .summary{padding:14px 16px}
 }
 </style>
 </head>
@@ -730,7 +617,7 @@ select option{background:#151b20;color:#f7fffb}
   <header class="topbar">
     <div class="brand">
       <div class="brand-mark" aria-hidden="true">
-        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
         </svg>
@@ -740,22 +627,21 @@ select option{background:#151b20;color:#f7fffb}
         <p>Native reminders, tuned from one dial.</p>
       </div>
     </div>
-
     <div class="top-actions">
       <button class="install-btn hidden" id="installBtn" type="button" aria-label="Install app" title="Install app">
-        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path>
         </svg>
       </button>
       <button class="permission-btn" id="notifyBtn" type="button">
         <span class="permission-icon" aria-hidden="true" id="notifyIcon">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 13c0 5-3.5 7-8 9-4.5-2-8-4-8-9V5l8-3 8 3v8Z"></path>
             <path d="m9 12 2 2 4-5"></path>
           </svg>
         </span>
         <span class="permission-copy">
-          <span>Native alerts</span>
+          <span>Alerts</span>
           <strong id="notifyState">Checking</strong>
         </span>
       </button>
@@ -763,61 +649,61 @@ select option{background:#151b20;color:#f7fffb}
   </header>
 
   <main>
-    <section class="hero-panel" aria-label="Reminder composer">
-      <div class="dial-zone">
-        <button class="time-dial" id="timeDial" type="button" aria-label="Reminder time dial" aria-valuemin="0" aria-valuemax="1439" aria-valuenow="540">
-          <span class="dial-sweep" aria-hidden="true"></span>
-          <span class="dial-hand" id="dialHand" aria-hidden="true"></span>
-          <span class="dial-hub" aria-hidden="true"></span>
-          <span class="dial-number n0">00</span>
-          <span class="dial-number n15">15</span>
-          <span class="dial-number n30">30</span>
-          <span class="dial-number n45">45</span>
-          <span class="dial-readout">
-            <span>
-              <strong id="dialMain">30m</strong>
-              <span id="dialSub">Every 30 minutes</span>
+    <section>
+      <h2 class="section-title">New reminder</h2>
+      <div class="group composer">
+        <div class="dial-row">
+          <button class="time-dial" id="timeDial" type="button" aria-label="Reminder time dial" aria-valuemin="0" aria-valuemax="1439" aria-valuenow="540">
+            <span class="dial-sweep" aria-hidden="true"></span>
+            <span class="dial-hand" id="dialHand" aria-hidden="true"></span>
+            <span class="dial-hub" aria-hidden="true"></span>
+            <span class="dial-number n0">00</span>
+            <span class="dial-number n15">15</span>
+            <span class="dial-number n30">30</span>
+            <span class="dial-number n45">45</span>
+            <span class="dial-readout">
+              <span>
+                <strong id="dialMain">30m</strong>
+                <span id="dialSub">Every 30 minutes</span>
+              </span>
             </span>
-          </span>
-        </button>
-
-        <div class="dial-footer">
-          <div class="mini-stat">
-            <strong id="nextMini">No reminders</strong>
-            <span>next alert</span>
-          </div>
-          <div class="ampm" id="ampmGroup" aria-label="AM PM">
-            <button type="button" data-period="AM" class="active">AM</button>
-            <button type="button" data-period="PM">PM</button>
+          </button>
+          <div class="dial-side">
+            <div class="mini-stat">
+              <strong id="nextMini">No reminders</strong>
+              <span>next alert</span>
+            </div>
+            <div class="ampm" id="ampmGroup" aria-label="AM PM">
+              <button type="button" data-period="AM" class="active">AM</button>
+              <button type="button" data-period="PM">PM</button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="composer-zone">
+        <textarea class="text-field" id="reminderName" maxlength="120" placeholder="Reminder name"></textarea>
+
         <div class="mode-tabs" role="tablist" aria-label="Schedule mode">
           <button class="mode-tab active" type="button" data-mode="interval">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
             In
           </button>
           <button class="mode-tab" type="button" data-mode="specific">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h18"></path></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h18"></path></svg>
             At
           </button>
           <button class="mode-tab" type="button" data-mode="tpd">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v7h-7"></path></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v7h-7"></path></svg>
             Daily
           </button>
           <button class="mode-tab" type="button" data-mode="random">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"></path><path d="M4 20 21 3"></path><path d="M21 16v5h-5"></path><path d="M15 15l6 6"></path><path d="M4 4l5 5"></path></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"></path><path d="M4 20 21 3"></path><path d="M21 16v5h-5"></path><path d="M15 15l6 6"></path><path d="M4 4l5 5"></path></svg>
             Random
           </button>
           <button class="mode-tab" type="button" data-mode="ntimes-in-period">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7"></path><path d="M4 10V3"></path><path d="M12 21v-9"></path><path d="M12 8V3"></path><path d="M20 21v-5"></path><path d="M20 12V3"></path><path d="M2 14h4"></path><path d="M10 8h4"></path><path d="M18 16h4"></path></svg>
-            Custom
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7"></path><path d="M4 10V3"></path><path d="M12 21v-9"></path><path d="M12 8V3"></path><path d="M20 21v-5"></path><path d="M20 12V3"></path><path d="M2 14h4"></path><path d="M10 8h4"></path><path d="M18 16h4"></path></svg>
+            More
           </button>
         </div>
-
-        <textarea class="text-field" id="reminderName" maxlength="120" placeholder="What's the reminder for?"></textarea>
 
         <div class="option-grid">
           <div class="config active" id="config-interval">
@@ -829,25 +715,21 @@ select option{background:#151b20;color:#f7fffb}
               <option value="seconds">seconds</option>
             </select>
           </div>
-
           <div class="config" id="config-specific">
-            <span class="field-label">Daily at</span>
+            <span class="field-label">At</span>
             <input type="time" id="specificTime" value="09:00">
           </div>
-
           <div class="config" id="config-tpd">
             <input type="number" id="timesPerDay" value="4" min="1" max="48" inputmode="numeric">
-            <span class="field-label">times per day from 8 AM to 10 PM</span>
+            <span class="field-label">times per day</span>
           </div>
-
           <div class="config" id="config-random">
             <input type="number" id="randomCount" value="6" min="1" max="100" inputmode="numeric">
-            <span class="field-label">random alerts between</span>
+            <span class="field-label">between</span>
             <input type="time" id="randomStart" value="08:00">
             <span class="field-label">and</span>
             <input type="time" id="randomEnd" value="22:00">
           </div>
-
           <div class="config" id="config-ntimes-in-period">
             <input type="number" id="periodCount" value="4" min="1" max="60" inputmode="numeric">
             <span class="field-label">times every</span>
@@ -861,54 +743,56 @@ select option{background:#151b20;color:#f7fffb}
 
         <div class="composer-actions">
           <button class="ghost-btn" id="testComposerBtn" type="button">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
-            Test native alert
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
+            Test
           </button>
           <button class="add-btn" id="addBtn" type="button">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path><path d="M12 19v3"></path><path d="M9 22h6"></path><path d="M19 19v-4"></path><path d="M17 17h4"></path></svg>
-            Add Reminder
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+            Add
           </button>
         </div>
       </div>
     </section>
 
-    <section class="stats-row" aria-label="Reminder stats">
+    <section class="group summary" aria-label="Reminder stats">
       <div class="stat">
-        <span class="stat-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11 12 14 22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></span>
+        <span class="stat-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11 12 14 22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></span>
         <span class="stat-copy"><strong id="activeStat">0</strong><span>active</span></span>
       </div>
       <div class="stat coral">
-        <span class="stat-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span>
-        <span class="stat-copy"><strong id="firedStat">0</strong><span>fired today</span></span>
+        <span class="stat-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span>
+        <span class="stat-copy"><strong id="firedStat">0</strong><span>today</span></span>
       </div>
       <div class="stat blue">
-        <span class="stat-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="m17 5-5-3-5 3"></path><path d="m17 19-5 3-5-3"></path></svg></span>
+        <span class="stat-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="m17 5-5-3-5 3"></path><path d="m17 19-5 3-5-3"></path></svg></span>
         <span class="stat-copy"><strong id="totalStat">0</strong><span>total</span></span>
       </div>
       <div class="stat">
-        <span class="stat-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l4 2"></path></svg></span>
+        <span class="stat-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l4 2"></path></svg></span>
         <span class="stat-copy"><strong id="nextStat">--</strong><span>next</span></span>
       </div>
     </section>
 
-    <section class="list-panel" aria-label="Active reminders">
-      <div class="list-head">
-        <div class="list-title">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          Active Reminders
-          <span class="count-chip" id="listCount">0</span>
+    <section>
+      <h2 class="section-title">Reminders</h2>
+      <div class="group list-panel" aria-label="Active reminders">
+        <div class="list-head">
+          <div class="list-title">
+            <span>Active</span>
+            <span class="count-chip" id="listCount">0</span>
+          </div>
+          <button class="ghost-btn" id="clearBtn" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg>
+            Clear
+          </button>
         </div>
-        <button class="ghost-btn" id="clearBtn" type="button">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg>
-          Clear
-        </button>
-      </div>
-      <div class="reminder-list" id="reminderList"></div>
-      <div class="empty" id="emptyState">
-        <div>
-          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          <strong>No reminders yet</strong>
-          <span>Create one and allow native alerts.</span>
+        <div class="reminder-list" id="reminderList"></div>
+        <div class="empty" id="emptyState">
+          <div>
+            <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <strong>No reminders</strong>
+            <span>Add one above.</span>
+          </div>
         </div>
       </div>
     </section>
@@ -917,7 +801,7 @@ select option{background:#151b20;color:#f7fffb}
 
 <div class="toast hidden" id="toast" role="status" aria-live="polite">
   <span class="permission-icon" aria-hidden="true">
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
   </span>
   <span>
     <strong id="toastTitle">Reminder</strong>
@@ -975,8 +859,8 @@ let deferredInstallPrompt = null;
 let tickLocked = false;
 
 const icons = {
-  play: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>',
-  trash: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg>'
+  play: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>',
+  trash: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg>'
 };
 
 function secureForServiceWorker(){
@@ -1018,12 +902,12 @@ function updateNotificationUI(){
   else if(state === "denied") els.notifyState.textContent = "Blocked";
   else if(state === "unsupported") els.notifyState.textContent = "Unavailable";
   else if(state === "insecure") els.notifyState.textContent = "Needs HTTPS";
-  else els.notifyState.textContent = "Tap to allow";
+  else els.notifyState.textContent = "Allow";
 }
 
 async function requestNativeNotifications(){
   if(!("Notification" in window)){
-    showToast("Native alerts unavailable", "This browser does not expose the Notification API.");
+    showToast("Native alerts unavailable", "This browser does not support notifications.");
     updateNotificationUI();
     return false;
   }
@@ -1040,36 +924,29 @@ async function requestNativeNotifications(){
 
   if(result === "granted"){
     await registerServiceWorker();
-    await showNativeNotification({
-      id: "ready",
-      name: "Notiminder alerts are ready",
-      mode: "system",
-      firedToday: 0
-    }, true);
+    await showNativeNotification({ id:"ready", name:"Notiminder alerts are ready", mode:"system", firedToday:0 }, true);
     return true;
   }
 
-  if(result === "denied") showToast("Notifications blocked", "Allow Notiminder in browser settings to use native alerts.");
+  if(result === "denied") showToast("Notifications blocked", "Allow Notiminder in browser settings.");
   return false;
 }
 
 async function showNativeNotification(reminder, isTest){
   if(!("Notification" in window) || Notification.permission !== "granted") return false;
-
   const title = isTest && reminder.id !== "ready" ? "Test: " + reminder.name : reminder.name;
   const body = reminder.id === "ready"
     ? "Real browser notifications are enabled."
     : (schedDesc(reminder) + " - " + (isTest ? "test alert" : "fired today: " + (reminder.firedToday || 0)));
-
   const options = {
     body,
-    tag: "notiminder-" + reminder.id,
-    renotify: true,
-    icon: "./icon-192.png",
-    badge: "./icon-192.png",
-    vibrate: [160, 70, 160],
-    data: { id: reminder.id, url: location.href },
-    actions: [{ action: "open", title: "Open" }]
+    tag:"notiminder-" + reminder.id,
+    renotify:true,
+    icon:"./icon-192.png",
+    badge:"./icon-192.png",
+    vibrate:[160,70,160],
+    data:{ id:reminder.id, url:location.href },
+    actions:[{ action:"open", title:"Open" }]
   };
 
   const registration = await getReadyRegistration();
@@ -1093,26 +970,12 @@ function showToast(title, body){
   els.toastTitle.textContent = title;
   els.toastBody.textContent = body;
   els.toast.classList.remove("hidden");
-  toastTimer = setTimeout(hideToast, 6500);
+  toastTimer = setTimeout(hideToast, 6000);
 }
 
-function hideToast(){
-  els.toast.classList.add("hidden");
-}
-
-function storeRead(key){
-  try{
-    return localStorage.getItem(key);
-  }catch(err){
-    return null;
-  }
-}
-
-function storeWrite(key, value){
-  try{
-    localStorage.setItem(key, value);
-  }catch(err){}
-}
+function hideToast(){ els.toast.classList.add("hidden"); }
+function storeRead(key){ try{return localStorage.getItem(key);}catch(err){return null;} }
+function storeWrite(key,value){ try{localStorage.setItem(key,value);}catch(err){} }
 
 async function loadReminders(){
   let raw = storeRead(STORAGE_KEY) || storeRead(OLD_STORAGE_KEY);
@@ -1122,20 +985,12 @@ async function loadReminders(){
       raw = old && old.value;
     }catch(err){}
   }
-
-  try{
-    reminders = raw ? JSON.parse(raw) : [];
-  }catch(err){
-    reminders = [];
-  }
-
+  try{ reminders = raw ? JSON.parse(raw) : []; }catch(err){ reminders = []; }
   reminders = reminders.map(normalizeReminder).filter(Boolean);
   const now = Date.now();
   reminders.forEach(reminder => {
     resetDailyCount(reminder);
-    if(reminder.enabled && (!reminder.nft || reminder.nft <= now)){
-      scheduleNext(reminder, now);
-    }
+    if(reminder.enabled && (!reminder.nft || reminder.nft <= now)) scheduleNext(reminder, now);
   });
   saveReminders();
   render();
@@ -1144,26 +999,23 @@ async function loadReminders(){
 
 function saveReminders(){
   storeWrite(STORAGE_KEY, JSON.stringify(reminders));
-  if(window.storage && window.storage.set){
-    window.storage.set(STORAGE_KEY, JSON.stringify(reminders)).catch(() => {});
-  }
+  if(window.storage && window.storage.set) window.storage.set(STORAGE_KEY, JSON.stringify(reminders)).catch(() => {});
 }
 
 function normalizeReminder(reminder){
   if(!reminder || !reminder.id || !reminder.name) return null;
   const mode = reminder.mode || "interval";
   const normalized = {
-    id: String(reminder.id),
-    name: String(reminder.name),
+    id:String(reminder.id),
+    name:String(reminder.name),
     mode,
-    enabled: reminder.enabled !== false,
-    firedToday: Number(reminder.firedToday || 0),
-    ftDate: reminder.ftDate || todayKey(),
-    createdAt: Number(reminder.createdAt || Date.now()),
-    lastFire: Number(reminder.lastFire || Date.now()),
-    nft: Number(reminder.nft || 0)
+    enabled:reminder.enabled !== false,
+    firedToday:Number(reminder.firedToday || 0),
+    ftDate:reminder.ftDate || todayKey(),
+    createdAt:Number(reminder.createdAt || Date.now()),
+    lastFire:Number(reminder.lastFire || Date.now()),
+    nft:Number(reminder.nft || 0)
   };
-
   if(mode === "interval"){
     normalized.iv = clampNumber(reminder.iv, 1, 9999, 30);
     normalized.iu = ["seconds","minutes","hours"].includes(reminder.iu) ? reminder.iu : "minutes";
@@ -1184,24 +1036,15 @@ function normalizeReminder(reminder){
   return normalized;
 }
 
-function clampNumber(value, min, max, fallback){
+function clampNumber(value,min,max,fallback){
   const num = Number(value);
   if(!Number.isFinite(num)) return fallback;
   return Math.max(min, Math.min(max, Math.round(num)));
 }
 
-function validTime(value){
-  return typeof value === "string" && /^\d{2}:\d{2}$/.test(value);
-}
-
-function genId(){
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
-
-function todayKey(){
-  return new Date().toDateString();
-}
-
+function validTime(value){ return typeof value === "string" && /^\d{2}:\d{2}$/.test(value); }
+function genId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function todayKey(){ return new Date().toDateString(); }
 function resetDailyCount(reminder){
   const today = todayKey();
   if(reminder.ftDate !== today){
@@ -1209,22 +1052,16 @@ function resetDailyCount(reminder){
     reminder.ftDate = today;
   }
 }
-
-function pad(value){
-  return String(value).padStart(2, "0");
-}
-
+function pad(value){ return String(value).padStart(2,"0"); }
 function parseTime(value){
   if(!validTime(value)) return 0;
   const parts = value.split(":").map(Number);
   return parts[0] * 60 + parts[1];
 }
-
 function minutesToInput(minutes){
   const normalized = ((minutes % 1440) + 1440) % 1440;
   return pad(Math.floor(normalized / 60)) + ":" + pad(normalized % 60);
 }
-
 function formatClock(minutes){
   const normalized = ((minutes % 1440) + 1440) % 1440;
   const h24 = Math.floor(normalized / 60);
@@ -1233,18 +1070,13 @@ function formatClock(minutes){
   const h12 = h24 % 12 || 12;
   return h12 + ":" + pad(mins) + " " + suffix;
 }
-
-function timeMs(value){
-  return parseTime(value) * 60000;
-}
-
+function timeMs(value){ return parseTime(value) * 60000; }
 function intervalMs(reminder){
   const value = clampNumber(reminder.iv, 1, 9999, 30);
   if(reminder.iu === "hours") return value * 3600000;
   if(reminder.iu === "seconds") return value * 1000;
   return value * 60000;
 }
-
 function generateRandomQueue(reminder, base){
   const d = new Date(base);
   const midnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -1252,12 +1084,10 @@ function generateRandomQueue(reminder, base){
   let end = midnight + timeMs(reminder.we || "22:00");
   if(end <= start) end += 86400000;
   const count = clampNumber(reminder.rc, 1, 100, 6);
-  return Array.from({ length: count }, () => start + Math.random() * (end - start)).sort((a,b) => a - b);
+  return Array.from({ length:count }, () => start + Math.random() * (end - start)).sort((a,b) => a - b);
 }
-
 function nextFire(reminder, from = Date.now()){
   if(reminder.mode === "interval") return from + intervalMs(reminder);
-
   if(reminder.mode === "tpd"){
     const d = new Date(from);
     const midnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -1271,7 +1101,6 @@ function nextFire(reminder, from = Date.now()){
     }
     return start + 86400000;
   }
-
   if(reminder.mode === "random"){
     if(!Array.isArray(reminder.rq) || !reminder.rq.length) reminder.rq = generateRandomQueue(reminder, from);
     const next = reminder.rq.find(time => time > from);
@@ -1279,32 +1108,27 @@ function nextFire(reminder, from = Date.now()){
     reminder.rq = generateRandomQueue(reminder, from + 86400000);
     return reminder.rq[0] || from + 3600000;
   }
-
   if(reminder.mode === "specific"){
-    const [hours, minutes] = (reminder.stime || "09:00").split(":").map(Number);
+    const [hours,minutes] = (reminder.stime || "09:00").split(":").map(Number);
     const d = new Date(from);
     let candidate = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hours, minutes, 0, 0).getTime();
     if(candidate <= from) candidate += 86400000;
     return candidate;
   }
-
   if(reminder.mode === "ntimes-in-period"){
     const periodMs = reminder.npUnit === "minute" ? reminder.npDur * 60000 : reminder.npDur * 3600000;
     return from + periodMs / Math.max(1, reminder.np);
   }
-
   return from + 3600000;
 }
-
 function scheduleNext(reminder, from = Date.now()){
   reminder.lastFire = from;
   reminder.nft = nextFire(reminder, from);
 }
-
 function schedDesc(reminder){
   if(reminder.mode === "interval") return "Every " + reminder.iv + " " + reminder.iu;
   if(reminder.mode === "tpd") return reminder.tpd + " times daily";
-  if(reminder.mode === "random") return reminder.rc + " random alerts, " + reminder.ws + "-" + reminder.we;
+  if(reminder.mode === "random") return reminder.rc + " random, " + reminder.ws + "-" + reminder.we;
   if(reminder.mode === "specific") return "Daily at " + formatClock(parseTime(reminder.stime));
   if(reminder.mode === "ntimes-in-period"){
     const unit = reminder.npUnit;
@@ -1312,7 +1136,6 @@ function schedDesc(reminder){
   }
   return "Reminder";
 }
-
 function fmtRemaining(ts){
   if(!ts) return "--";
   const diff = ts - Date.now();
@@ -1322,38 +1145,22 @@ function fmtRemaining(ts){
   if(diff < 86400000) return Math.ceil(diff / 3600000) + "h";
   return Math.ceil(diff / 86400000) + "d";
 }
-
 function fmtNextLabel(ts){
   if(!ts) return "--";
   const diff = ts - Date.now();
   if(diff < 0) return "now";
   if(diff < 86400000) return formatClock(new Date(ts).getHours() * 60 + new Date(ts).getMinutes());
   const d = new Date(ts);
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return d.toLocaleDateString(undefined, { month:"short", day:"numeric" });
 }
-
 function escapeHtml(value){
   return String(value).replace(/[&<>"']/g, char => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#039;"
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   })[char]);
 }
-
 function currentFormReminder(){
   const name = els.reminderName.value.trim() || "Test reminder";
-  const reminder = {
-    id: genId(),
-    name,
-    mode: currentMode,
-    enabled: true,
-    firedToday: 0,
-    ftDate: todayKey(),
-    createdAt: Date.now()
-  };
-
+  const reminder = { id:genId(), name, mode:currentMode, enabled:true, firedToday:0, ftDate:todayKey(), createdAt:Date.now() };
   if(currentMode === "interval"){
     reminder.iv = clampNumber(els.intervalValue.value, 1, 9999, 30);
     reminder.iu = els.intervalUnit.value;
@@ -1371,11 +1178,9 @@ function currentFormReminder(){
     reminder.npDur = clampNumber(els.periodDuration.value, 1, 60, 1);
     reminder.npUnit = els.periodUnit.value === "minute" ? "minute" : "hour";
   }
-
   scheduleNext(reminder, Date.now());
   return reminder;
 }
-
 async function addReminder(){
   const name = els.reminderName.value.trim();
   if(!name){
@@ -1383,48 +1188,35 @@ async function addReminder(){
     showToast("Name the reminder", "Add a short title before saving.");
     return;
   }
-
   const reminder = currentFormReminder();
   reminders.push(reminder);
   els.reminderName.value = "";
   saveReminders();
   render();
   updateStats();
-
   if(notificationSupportState() === "default") await requestNativeNotifications();
 }
-
 function setMode(mode){
   currentMode = mode;
-  document.querySelectorAll(".mode-tab").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.mode === mode);
-  });
-  document.querySelectorAll(".config").forEach(config => {
-    config.classList.toggle("active", config.id === "config-" + mode);
-  });
+  document.querySelectorAll(".mode-tab").forEach(btn => btn.classList.toggle("active", btn.dataset.mode === mode));
+  document.querySelectorAll(".config").forEach(config => config.classList.toggle("active", config.id === "config-" + mode));
   updateDial();
 }
-
 function setSpecificFromDial(minutes){
   dialMinutes = ((minutes % 1440) + 1440) % 1440;
   els.specificTime.value = minutesToInput(dialMinutes);
   updateAmpm();
 }
-
 function updateAmpm(){
   const period = dialMinutes >= 720 ? "PM" : "AM";
-  els.ampmGroup.querySelectorAll("button").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.period === period);
-  });
+  els.ampmGroup.querySelectorAll("button").forEach(btn => btn.classList.toggle("active", btn.dataset.period === period));
 }
-
 function updateDial(){
   let angle = 180;
   let main = "30m";
   let sub = "Every 30 minutes";
   let valueNow = 0;
   let valueMax = 1439;
-
   if(currentMode === "interval"){
     const value = clampNumber(els.intervalValue.value, 1, 9999, 30);
     const unit = els.intervalUnit.value;
@@ -1436,25 +1228,22 @@ function updateDial(){
     valueNow = value;
     valueMax = mod;
   }
-
   if(currentMode === "specific"){
     dialMinutes = parseTime(els.specificTime.value || "09:00");
     angle = (dialMinutes % 720) / 720 * 360;
     main = formatClock(dialMinutes);
-    sub = "Daily alert";
+    sub = "Daily";
     valueNow = dialMinutes;
     valueMax = 1439;
   }
-
   if(currentMode === "tpd"){
     const count = clampNumber(els.timesPerDay.value, 1, 48, 4);
     angle = count / 48 * 360;
     main = count + "/day";
-    sub = "8 AM to 10 PM";
+    sub = "Daily";
     valueNow = count;
     valueMax = 48;
   }
-
   if(currentMode === "random"){
     const count = clampNumber(els.randomCount.value, 1, 100, 6);
     angle = count / 100 * 360;
@@ -1463,18 +1252,16 @@ function updateDial(){
     valueNow = count;
     valueMax = 100;
   }
-
   if(currentMode === "ntimes-in-period"){
     const count = clampNumber(els.periodCount.value, 1, 60, 4);
     const duration = clampNumber(els.periodDuration.value, 1, 60, 1);
     const unit = els.periodUnit.value;
     angle = count / 60 * 360;
     main = count + "x";
-    sub = "Every " + duration + " " + unit + (duration === 1 ? "" : "s");
+    sub = duration + " " + unit + (duration === 1 ? "" : "s");
     valueNow = count;
     valueMax = 60;
   }
-
   els.timeDial.style.setProperty("--dial-angle", angle + "deg");
   els.dialMain.textContent = main;
   els.dialSub.textContent = sub;
@@ -1482,14 +1269,12 @@ function updateDial(){
   els.timeDial.setAttribute("aria-valuemax", String(valueMax));
   updateAmpm();
 }
-
 function pointerAngle(event){
   const rect = els.timeDial.getBoundingClientRect();
   const x = event.clientX - rect.left - rect.width / 2;
   const y = event.clientY - rect.top - rect.height / 2;
   return (Math.atan2(y, x) * 180 / Math.PI + 90 + 360) % 360;
 }
-
 function updateDialFromPointer(event){
   const angle = pointerAngle(event);
   if(currentMode === "specific"){
@@ -1505,28 +1290,20 @@ function updateDialFromPointer(event){
   }
   updateDial();
 }
-
 function render(){
   els.listCount.textContent = String(reminders.length);
   els.empty.classList.toggle("hidden", reminders.length > 0);
-  els.list.innerHTML = reminders.map((reminder, index) => {
+  els.list.innerHTML = reminders.map(reminder => {
     resetDailyCount(reminder);
-    const tone = index % 4 === 1 ? "blue" : index % 4 === 3 ? "coral" : "mint";
     const enabled = reminder.enabled;
-    return '<article class="reminder-row ' + (enabled ? "" : "off") + '" data-id="' + reminder.id + '" data-tone="' + tone + '">' +
+    return '<article class="reminder-row ' + (enabled ? "" : "off") + '" data-id="' + reminder.id + '">' +
       '<span class="accent-line" aria-hidden="true"></span>' +
       '<div class="reminder-main">' +
         '<div class="reminder-name">' + escapeHtml(reminder.name) + '</div>' +
-        '<div class="reminder-meta">' +
-          '<span class="tag">' + escapeHtml(schedDesc(reminder)) + '</span>' +
-          '<span class="tag blue">fired today: ' + (reminder.firedToday || 0) + '</span>' +
-        '</div>' +
+        '<div class="reminder-meta"><span class="tag">' + escapeHtml(schedDesc(reminder)) + '</span><span class="tag blue">fired today: ' + (reminder.firedToday || 0) + '</span></div>' +
         '<div class="progress"><i id="progress-' + reminder.id + '"></i></div>' +
       '</div>' +
-      '<div class="next-cell">' +
-        '<strong id="remaining-' + reminder.id + '">' + (enabled ? fmtRemaining(reminder.nft) : "--") + '</strong>' +
-        '<span id="next-' + reminder.id + '">' + (enabled ? fmtNextLabel(reminder.nft) : "paused") + '</span>' +
-      '</div>' +
+      '<div class="next-cell"><strong id="remaining-' + reminder.id + '">' + (enabled ? fmtRemaining(reminder.nft) : "--") + '</strong><span id="next-' + reminder.id + '">' + (enabled ? fmtNextLabel(reminder.nft) : "paused") + '</span></div>' +
       '<button class="switch ' + (enabled ? "on" : "") + '" data-action="toggle" data-id="' + reminder.id + '" type="button" aria-label="' + (enabled ? "Pause" : "Resume") + ' reminder"></button>' +
       '<div class="row-tools">' +
         '<button class="tool-btn" data-action="test" data-id="' + reminder.id + '" type="button">' + icons.play + '<span>Test</span></button>' +
@@ -1536,26 +1313,18 @@ function render(){
   }).join("");
   updateCountdowns();
 }
-
 function updateStats(){
   const active = reminders.filter(reminder => reminder.enabled).length;
   const today = todayKey();
-  const fired = reminders.reduce((sum, reminder) => {
-    return sum + (reminder.ftDate === today ? Number(reminder.firedToday || 0) : 0);
-  }, 0);
+  const fired = reminders.reduce((sum, reminder) => sum + (reminder.ftDate === today ? Number(reminder.firedToday || 0) : 0), 0);
   const next = reminders.filter(reminder => reminder.enabled && reminder.nft).sort((a,b) => a.nft - b.nft)[0];
-
   els.activeStat.textContent = String(active);
   els.firedStat.textContent = String(fired);
   els.totalStat.textContent = String(reminders.length);
   els.nextStat.textContent = next ? fmtRemaining(next.nft) : "--";
   els.nextMini.textContent = next ? fmtRemaining(next.nft) + " - " + escapePlain(next.name) : "No reminders";
 }
-
-function escapePlain(value){
-  return String(value).replace(/\s+/g, " ").slice(0, 32);
-}
-
+function escapePlain(value){ return String(value).replace(/\s+/g," ").slice(0,32); }
 function updateCountdowns(){
   const now = Date.now();
   reminders.forEach(reminder => {
@@ -1565,9 +1334,8 @@ function updateCountdowns(){
     if(remaining) remaining.textContent = reminder.enabled ? fmtRemaining(reminder.nft) : "--";
     if(next) next.textContent = reminder.enabled ? fmtNextLabel(reminder.nft) : "paused";
     if(progress){
-      if(!reminder.enabled || !reminder.nft){
-        progress.style.width = "0%";
-      }else{
+      if(!reminder.enabled || !reminder.nft) progress.style.width = "0%";
+      else{
         const start = Number(reminder.lastFire || now);
         const total = Math.max(1, reminder.nft - start);
         const remain = Math.max(0, reminder.nft - now);
@@ -1576,13 +1344,12 @@ function updateCountdowns(){
     }
   });
 }
-
 function chime(){
   try{
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if(!AudioCtx) return;
     const ctx = new AudioCtx();
-    [523.25, 659.25, 783.99].forEach((frequency, index) => {
+    [523.25,659.25,783.99].forEach((frequency,index) => {
       const oscillator = ctx.createOscillator();
       const gain = ctx.createGain();
       oscillator.connect(gain);
@@ -1591,20 +1358,14 @@ function chime(){
       oscillator.frequency.value = frequency;
       const start = ctx.currentTime + index * .13;
       gain.gain.setValueAtTime(.001, start);
-      gain.gain.exponentialRampToValueAtTime(.2, start + .04);
-      gain.gain.exponentialRampToValueAtTime(.001, start + .42);
+      gain.gain.exponentialRampToValueAtTime(.16, start + .04);
+      gain.gain.exponentialRampToValueAtTime(.001, start + .38);
       oscillator.start(start);
-      oscillator.stop(start + .45);
+      oscillator.stop(start + .42);
     });
   }catch(err){}
 }
-
-function vibrate(){
-  try{
-    if(navigator.vibrate) navigator.vibrate([160, 70, 160]);
-  }catch(err){}
-}
-
+function vibrate(){ try{ if(navigator.vibrate) navigator.vibrate([160,70,160]); }catch(err){} }
 async function fireReminder(reminder, isTest = false){
   resetDailyCount(reminder);
   if(!isTest){
@@ -1612,43 +1373,30 @@ async function fireReminder(reminder, isTest = false){
     scheduleNext(reminder, Date.now() + 250);
     saveReminders();
   }
-
   render();
   updateStats();
-
   const row = document.querySelector('[data-id="' + reminder.id + '"]');
   if(row){
     row.classList.add("firing");
-    setTimeout(() => row.classList.remove("firing"), 1800);
+    setTimeout(() => row.classList.remove("firing"), 1400);
   }
-
   const nativeShown = await showNativeNotification(reminder, isTest);
   chime();
   vibrate();
-
-  if(!nativeShown){
-    const title = isTest ? "Test alert" : "Reminder";
-    showToast(title, reminder.name + " - " + schedDesc(reminder));
-  }
+  if(!nativeShown) showToast(isTest ? "Test alert" : "Reminder", reminder.name + " - " + schedDesc(reminder));
 }
-
 async function tick(){
   if(tickLocked) return;
   tickLocked = true;
   try{
     const now = Date.now();
     for(const reminder of reminders){
-      if(reminder.enabled && reminder.nft && reminder.nft <= now){
-        await fireReminder(reminder, false);
-      }
+      if(reminder.enabled && reminder.nft && reminder.nft <= now) await fireReminder(reminder, false);
     }
     updateCountdowns();
     updateStats();
-  }finally{
-    tickLocked = false;
-  }
+  }finally{ tickLocked = false; }
 }
-
 function toggleReminder(id){
   const reminder = reminders.find(item => item.id === id);
   if(!reminder) return;
@@ -1661,14 +1409,12 @@ function toggleReminder(id){
   render();
   updateStats();
 }
-
 function deleteReminder(id){
   reminders = reminders.filter(item => item.id !== id);
   saveReminders();
   render();
   updateStats();
 }
-
 function clearReminders(){
   if(!reminders.length) return;
   if(confirm("Delete all reminders?")){
@@ -1678,18 +1424,9 @@ function clearReminders(){
     updateStats();
   }
 }
-
 function setupEvents(){
-  document.querySelectorAll(".mode-tab").forEach(btn => {
-    btn.addEventListener("click", () => setMode(btn.dataset.mode));
-  });
-
-  [
-    els.intervalValue, els.intervalUnit, els.specificTime, els.timesPerDay,
-    els.randomCount, els.randomStart, els.randomEnd, els.periodCount,
-    els.periodDuration, els.periodUnit
-  ].forEach(input => input.addEventListener("input", updateDial));
-
+  document.querySelectorAll(".mode-tab").forEach(btn => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
+  [els.intervalValue,els.intervalUnit,els.specificTime,els.timesPerDay,els.randomCount,els.randomStart,els.randomEnd,els.periodCount,els.periodDuration,els.periodUnit].forEach(input => input.addEventListener("input", updateDial));
   els.addBtn.addEventListener("click", addReminder);
   els.testComposerBtn.addEventListener("click", async () => {
     if(notificationSupportState() === "default") await requestNativeNotifications();
@@ -1698,7 +1435,6 @@ function setupEvents(){
   els.notifyBtn.addEventListener("click", requestNativeNotifications);
   els.clearBtn.addEventListener("click", clearReminders);
   els.toastClose.addEventListener("click", hideToast);
-
   els.ampmGroup.addEventListener("click", event => {
     const button = event.target.closest("button[data-period]");
     if(!button) return;
@@ -1706,7 +1442,6 @@ function setupEvents(){
     setSpecificFromDial(button.dataset.period === "PM" ? base + 720 : base);
     if(currentMode !== "specific") setMode("specific");
   });
-
   let dragging = false;
   els.timeDial.addEventListener("pointerdown", event => {
     dragging = true;
@@ -1720,10 +1455,7 @@ function setupEvents(){
     dragging = false;
     els.timeDial.releasePointerCapture(event.pointerId);
   });
-  els.timeDial.addEventListener("pointercancel", () => {
-    dragging = false;
-  });
-
+  els.timeDial.addEventListener("pointercancel", () => { dragging = false; });
   els.list.addEventListener("click", async event => {
     const button = event.target.closest("[data-action]");
     if(!button) return;
@@ -1735,13 +1467,11 @@ function setupEvents(){
       if(reminder) await fireReminder(reminder, true);
     }
   });
-
   window.addEventListener("beforeinstallprompt", event => {
     event.preventDefault();
     deferredInstallPrompt = event;
     els.installBtn.classList.remove("hidden");
   });
-
   els.installBtn.addEventListener("click", async () => {
     if(!deferredInstallPrompt) return;
     deferredInstallPrompt.prompt();
@@ -1750,7 +1480,6 @@ function setupEvents(){
     els.installBtn.classList.add("hidden");
   });
 }
-
 async function init(){
   setupEvents();
   dialMinutes = parseTime(els.specificTime.value);
@@ -1760,7 +1489,6 @@ async function init(){
   await loadReminders();
   setInterval(tick, 1000);
 }
-
 init();
 </script>
 </body>
