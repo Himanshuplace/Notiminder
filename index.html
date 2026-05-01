@@ -1,503 +1,1767 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Reminders</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Notiminder</title>
+<meta name="theme-color" content="#101418">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Notiminder">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0d0f14;--surface:#161921;--card:#1d2230;--border:#2a3040;--border2:#35404f;
-  --green:#22c87a;--green2:#1a9b5e;--green-bg:rgba(34,200,122,.08);
-  --amber:#f5a623;--amber-bg:rgba(245,166,35,.08);
-  --red:#ff4f4f;--red-bg:rgba(255,79,79,.08);
-  --blue:#4f8fff;--blue-bg:rgba(79,143,255,.08);
-  --text:#e8eaf0;--text2:#8892a4;--text3:#4a5568;
-  --radius:12px;--radius-sm:8px;--radius-xs:6px;
-  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --bg:#101418;
+  --bg-soft:#171d22;
+  --panel:#f7faf8;
+  --panel-2:#ffffff;
+  --ink:#101418;
+  --muted:#66737f;
+  --subtle:#9aa5ad;
+  --line:#dbe3df;
+  --line-dark:#273039;
+  --mint:#51dec0;
+  --mint-dark:#138d77;
+  --mint-soft:#e4faf4;
+  --blue:#4f93ff;
+  --blue-soft:#e9f1ff;
+  --coral:#ff766d;
+  --coral-soft:#fff0ee;
+  --amber:#e7a923;
+  --shadow:0 28px 80px rgba(0,0,0,.22);
+  --radius:8px;
+  --font:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono:"SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
-body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;display:flex;flex-direction:column}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
 
-/* NAV */
-nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-icon{width:32px;height:32px;background:var(--green);border-radius:9px;display:flex;align-items:center;justify-content:center}
-.logo-icon svg{display:block}
-.logo-text{font-size:16px;font-weight:600;color:var(--text)}
-.nav-right{display:flex;align-items:center;gap:10px}
-.pill{background:var(--green-bg);border:1px solid rgba(34,200,122,.2);color:var(--green);font-size:12px;font-weight:500;padding:4px 12px;border-radius:99px;font-family:var(--mono)}
+*{box-sizing:border-box}
+html{min-height:100%;background:var(--bg)}
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:var(--font);
+  color:#ecf4f0;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(81,222,192,.16), transparent 34rem),
+    linear-gradient(145deg,#101418 0%,#151b20 44%,#0d1115 100%);
+  letter-spacing:0;
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.55}
+svg{display:block}
 
-/* MAIN */
-main{flex:1;max-width:860px;margin:0 auto;width:100%;padding:28px 24px}
+.app-frame{
+  width:min(1180px,100%);
+  margin:0 auto;
+  padding:18px 18px max(24px,env(safe-area-inset-bottom));
+}
 
-/* NOTIFICATION */
-#notif{display:none;position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:999;width:min(500px,90vw)}
-.notif-inner{background:var(--surface);border:1.5px solid var(--green);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;gap:14px;animation:slideNotif .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 8px 40px rgba(0,0,0,.6),0 0 0 1px rgba(34,200,122,.15)}
-@keyframes slideNotif{from{opacity:0;transform:translateY(-14px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes ringPulse{0%,100%{transform:scale(1)}30%{transform:scale(1.08)}}
-.notif-icon{width:40px;height:40px;background:var(--green-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:ringPulse .5s ease .3s 3}
-.notif-label{font-size:10px;font-weight:600;color:var(--green);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
-.notif-name{font-size:15px;font-weight:500;color:var(--text)}
-.notif-sub{font-size:12px;color:var(--text2);margin-top:2px}
-.notif-close{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;padding:4px;line-height:1;flex-shrink:0;transition:color .15s}
-.notif-close:hover{color:var(--text)}
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  min-height:66px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.brand-mark{
+  width:44px;
+  height:44px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(81,222,192,.36);
+  border-radius:8px;
+  background:linear-gradient(150deg,rgba(81,222,192,.22),rgba(255,255,255,.05));
+  color:var(--mint);
+  box-shadow:0 10px 32px rgba(81,222,192,.18);
+}
+.brand h1{
+  margin:0;
+  font-size:clamp(24px,3vw,34px);
+  line-height:1;
+  font-weight:760;
+  letter-spacing:0;
+}
+.brand p{
+  margin:5px 0 0;
+  color:#a9b8b2;
+  font-size:13px;
+}
+.top-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+}
+.permission-btn,
+.install-btn{
+  min-height:50px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:8px;
+  background:rgba(255,255,255,.07);
+  color:#f8fffc;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 12px;
+  box-shadow:0 12px 35px rgba(0,0,0,.18);
+  transition:transform .18s ease,border-color .18s ease,background .18s ease;
+}
+.permission-btn:hover,
+.install-btn:hover{transform:translateY(-1px);border-color:rgba(81,222,192,.45);background:rgba(255,255,255,.1)}
+.permission-icon{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  color:var(--mint);
+  border-radius:8px;
+  background:rgba(81,222,192,.13);
+}
+.permission-copy{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  line-height:1.1;
+  white-space:nowrap;
+}
+.permission-copy span{font-size:12px;color:#b5c2bd}
+.permission-copy strong{margin-top:3px;font-size:15px;color:var(--mint);font-weight:760}
+.install-btn{width:50px;justify-content:center;padding:0;color:#dfe9e4}
+.hidden{display:none!important}
 
-/* ADD CARD */
-.add-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;margin-bottom:20px}
-.section-head{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px}
-.field-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
-.field-label{font-size:12px;color:var(--text2);flex-shrink:0}
+.hero-panel{
+  display:grid;
+  grid-template-columns:minmax(280px,.88fr) minmax(360px,1.35fr);
+  gap:24px;
+  padding:24px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:8px;
+  background:linear-gradient(145deg,rgba(255,255,255,.1),rgba(255,255,255,.045));
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
 
-input[type=text],input[type=number],input[type=time],select{
-  background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);
-  color:var(--text);font-family:var(--font);font-size:13px;padding:8px 11px;outline:none;
-  transition:border-color .15s}
-input[type=text]{width:100%}
-input[type=text]:focus,input[type=number]:focus,input[type=time]:focus,select:focus{border-color:var(--green)}
-input[type=number]{width:72px;text-align:center}
-input[type=time]{width:110px}
-select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238892a4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
-select option{background:var(--card)}
+.dial-zone{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+}
+.time-dial{
+  --dial-angle:180deg;
+  width:min(100%,386px);
+  aspect-ratio:1;
+  position:relative;
+  border:0;
+  border-radius:50%;
+  padding:0;
+  color:#f6fffb;
+  background:
+    radial-gradient(circle at 50% 50%,#192229 0 42%,transparent 43%),
+    repeating-conic-gradient(from 0deg,rgba(255,255,255,.85) 0deg 1.4deg,transparent 1.4deg 6deg),
+    conic-gradient(from 0deg,rgba(81,222,192,.55),rgba(79,147,255,.18),rgba(255,118,109,.18),rgba(81,222,192,.55));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),inset 0 0 60px rgba(81,222,192,.16),0 32px 70px rgba(0,0,0,.32);
+  isolation:isolate;
+  touch-action:none;
+  transition:transform .22s ease,box-shadow .22s ease;
+}
+.time-dial::before{
+  content:"";
+  position:absolute;
+  inset:7%;
+  z-index:-1;
+  border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,#101820 0 59%,rgba(81,222,192,.08) 60% 100%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);
+}
+.time-dial:focus-visible{outline:3px solid rgba(81,222,192,.45);outline-offset:5px}
+.time-dial:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16),inset 0 0 70px rgba(81,222,192,.2),0 36px 80px rgba(0,0,0,.36)}
+.dial-sweep{
+  position:absolute;
+  inset:4%;
+  border-radius:50%;
+  background:conic-gradient(from var(--dial-angle),rgba(81,222,192,.34),transparent 54deg);
+  filter:blur(6px);
+  opacity:.7;
+  animation:sweepGlow 4.8s ease-in-out infinite;
+}
+.dial-hand{
+  position:absolute;
+  inset:0;
+  transform:rotate(var(--dial-angle));
+  transition:transform .5s cubic-bezier(.2,.9,.2,1);
+}
+.dial-hand::before{
+  content:"";
+  position:absolute;
+  left:calc(50% - 4px);
+  top:19%;
+  width:8px;
+  height:32%;
+  border-radius:999px;
+  background:linear-gradient(180deg,#79ffe2,#34d8ba);
+  transform-origin:50% 100%;
+  box-shadow:0 0 18px rgba(81,222,192,.6);
+}
+.dial-hub{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:34px;
+  height:34px;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:#51dec0;
+  border:8px solid rgba(255,255,255,.18);
+  box-shadow:0 0 0 1px rgba(81,222,192,.45),0 0 26px rgba(81,222,192,.48);
+}
+.dial-readout{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  pointer-events:none;
+}
+.dial-readout strong{
+  display:block;
+  color:#fbfffd;
+  font-size:clamp(38px,5vw,62px);
+  line-height:.96;
+  font-weight:760;
+  letter-spacing:0;
+}
+.dial-readout span{
+  display:block;
+  margin-top:10px;
+  color:var(--mint);
+  font-size:15px;
+  font-weight:720;
+}
+.dial-number{
+  position:absolute;
+  color:rgba(255,255,255,.82);
+  font-size:15px;
+  font-family:var(--mono);
+  font-weight:700;
+}
+.dial-number.n0{left:50%;top:9%;transform:translateX(-50%)}
+.dial-number.n15{right:11%;top:50%;transform:translateY(-50%)}
+.dial-number.n30{left:50%;bottom:9%;transform:translateX(-50%)}
+.dial-number.n45{left:11%;top:50%;transform:translateY(-50%)}
+.dial-footer{
+  width:min(100%,386px);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.mini-stat{
+  min-width:0;
+  color:#aebcb6;
+  font-size:12px;
+}
+.mini-stat strong{
+  display:block;
+  margin-bottom:2px;
+  color:#f7fffb;
+  font-size:16px;
+}
+.ampm{
+  display:flex;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:8px;
+  overflow:hidden;
+}
+.ampm button{
+  min-width:48px;
+  border:0;
+  color:#afbbb7;
+  background:rgba(255,255,255,.05);
+  padding:9px 10px;
+  font-size:12px;
+  font-weight:760;
+}
+.ampm button.active{color:#101418;background:var(--mint)}
 
-.mode-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.mtab{background:transparent;border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text2);font-family:var(--font);font-size:12px;font-weight:500;padding:6px 13px;cursor:pointer;transition:all .15s}
-.mtab.on{background:var(--green-bg);border-color:rgba(34,200,122,.35);color:var(--green)}
+.composer-zone{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:16px;
+}
+.mode-tabs{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:8px;
+  overflow:hidden;
+  background:rgba(9,13,17,.18);
+}
+.mode-tab{
+  min-height:58px;
+  border:0;
+  border-right:1px solid rgba(255,255,255,.12);
+  background:transparent;
+  color:#d9e4df;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  padding:10px;
+  font-size:14px;
+  font-weight:720;
+  transition:background .18s ease,color .18s ease;
+}
+.mode-tab:last-child{border-right:0}
+.mode-tab.active{background:rgba(81,222,192,.14);color:var(--mint);box-shadow:inset 0 0 0 1px rgba(81,222,192,.35)}
+.mode-tab:hover{background:rgba(255,255,255,.07)}
 
-.cfg{display:none}
-.cfg.on{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;background:var(--card);border-radius:var(--radius-sm);margin-bottom:12px}
+.text-field{
+  width:100%;
+  min-height:108px;
+  resize:vertical;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;
+  background:rgba(7,11,15,.3);
+  color:#fbfffd;
+  outline:none;
+  padding:18px 18px;
+  font-size:19px;
+  line-height:1.35;
+  transition:border-color .18s ease,background .18s ease;
+}
+.text-field::placeholder{color:#7e8c86}
+.text-field:focus{border-color:rgba(81,222,192,.65);background:rgba(7,11,15,.42)}
 
-.btn-add{background:var(--green);color:#0d0f14;border:none;border-radius:var(--radius-sm);padding:9px 22px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
-.btn-add:hover{background:#1fb06a;transform:translateY(-1px)}
-.btn-add:active{transform:translateY(0)}
+.option-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+.config{
+  display:none;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  min-height:64px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:8px;
+  background:rgba(7,11,15,.24);
+  padding:12px;
+}
+.config.active{display:flex;animation:fadeUp .22s ease both}
+.field-label{
+  color:#b4c1bb;
+  font-size:13px;
+  font-weight:690;
+}
+input[type=text],
+input[type=number],
+input[type=time],
+select{
+  height:42px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:8px;
+  background:rgba(255,255,255,.08);
+  color:#f9fffc;
+  outline:none;
+  padding:0 12px;
+  font-size:14px;
+  font-weight:680;
+  transition:border-color .18s ease,background .18s ease;
+}
+input[type=number]{width:86px;text-align:center}
+input[type=time]{width:132px}
+select{min-width:128px}
+input:focus,select:focus{border-color:rgba(81,222,192,.6);background:rgba(255,255,255,.11)}
+select option{background:#151b20;color:#f7fffb}
 
-/* STATS ROW */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px}
-.stat-num{font-size:24px;font-weight:600;font-family:var(--mono);margin-bottom:2px}
-.stat-label{font-size:11px;color:var(--text2)}
-.s-green .stat-num{color:var(--green)}
-.s-amber .stat-num{color:var(--amber)}
-.s-blue .stat-num{color:var(--blue)}
+.composer-actions{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+}
+.add-btn{
+  min-height:58px;
+  flex:1;
+  border:0;
+  border-radius:8px;
+  background:linear-gradient(135deg,#78ffe3,#38d6b7);
+  color:#07110f;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:0 22px;
+  font-size:17px;
+  font-weight:830;
+  box-shadow:0 18px 46px rgba(81,222,192,.25);
+  transition:transform .16s ease,box-shadow .16s ease,filter .16s ease;
+}
+.add-btn:hover{transform:translateY(-1px);box-shadow:0 22px 54px rgba(81,222,192,.3);filter:saturate(1.04)}
+.add-btn:active{transform:translateY(0) scale(.99)}
+.ghost-btn{
+  min-height:44px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:8px;
+  background:rgba(255,255,255,.06);
+  color:#d9e5df;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:0 14px;
+  font-size:13px;
+  font-weight:740;
+}
+.ghost-btn:hover{border-color:rgba(81,222,192,.45);color:#ffffff}
 
-/* REMINDERS LIST */
-.list-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.list-title{font-size:13px;font-weight:500;color:var(--text2)}
-.btn-clear{background:none;border:1px solid var(--border);border-radius:var(--radius-xs);color:var(--text3);font-family:var(--font);font-size:11px;padding:4px 10px;cursor:pointer;transition:all .15s}
-.btn-clear:hover{border-color:var(--red);color:var(--red)}
+.stats-row{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin:12px 0;
+}
+.stat{
+  min-height:96px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:8px;
+  background:rgba(255,255,255,.07);
+  padding:16px;
+  display:flex;
+  align-items:center;
+  gap:13px;
+}
+.stat-icon{
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  color:var(--mint);
+  background:rgba(81,222,192,.13);
+  flex:0 0 auto;
+}
+.stat.blue .stat-icon{color:var(--blue);background:rgba(79,147,255,.13)}
+.stat.coral .stat-icon{color:var(--coral);background:rgba(255,118,109,.13)}
+.stat strong{
+  display:block;
+  color:#fbfffd;
+  font-size:25px;
+  line-height:1;
+}
+.stat-copy{
+  min-width:0;
+}
+.stat-copy span{
+  display:block;
+  margin-top:5px;
+  color:#aebcb6;
+  font-size:13px;
+}
 
-/* REMINDER ITEM */
-.rcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;transition:border-color .2s;animation:fadeUp .22s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.rcard:hover{border-color:var(--border2)}
-.rcard.firing{border-color:var(--green);background:rgba(34,200,122,.04)}
+.list-panel{
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:8px;
+  background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.055));
+  box-shadow:0 22px 60px rgba(0,0,0,.18);
+  overflow:hidden;
+}
+.list-head{
+  min-height:62px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:0 18px;
+  border-bottom:1px solid rgba(255,255,255,.11);
+}
+.list-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:780;
+  font-size:18px;
+}
+.count-chip{
+  min-width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  background:rgba(81,222,192,.13);
+  color:var(--mint);
+  font-size:14px;
+  font-family:var(--mono);
+}
+.reminder-list{display:grid}
+.reminder-row{
+  display:grid;
+  grid-template-columns:6px 1fr auto auto auto;
+  align-items:center;
+  gap:16px;
+  min-height:96px;
+  padding:14px 18px;
+  border-bottom:1px solid rgba(255,255,255,.09);
+  animation:rowIn .24s ease both;
+}
+.reminder-row:last-child{border-bottom:0}
+.reminder-row.firing{background:rgba(81,222,192,.12)}
+.accent-line{
+  width:6px;
+  height:58px;
+  border-radius:999px;
+  background:var(--mint);
+  box-shadow:0 0 20px rgba(81,222,192,.36);
+}
+.reminder-row[data-tone=blue] .accent-line{background:var(--blue);box-shadow:0 0 18px rgba(79,147,255,.35)}
+.reminder-row[data-tone=coral] .accent-line{background:var(--coral);box-shadow:0 0 18px rgba(255,118,109,.35)}
+.reminder-main{min-width:0}
+.reminder-name{
+  color:#fbfffd;
+  font-size:17px;
+  font-weight:790;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.reminder-row.off .reminder-name{color:#7f8c87}
+.reminder-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:9px;
+}
+.tag{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:26px;
+  border:1px solid rgba(81,222,192,.24);
+  border-radius:8px;
+  color:var(--mint);
+  background:rgba(81,222,192,.1);
+  padding:0 9px;
+  font-size:12px;
+  font-weight:760;
+}
+.tag.blue{border-color:rgba(79,147,255,.25);color:#8dbcff;background:rgba(79,147,255,.11)}
+.tag.coral{border-color:rgba(255,118,109,.25);color:#ff9c95;background:rgba(255,118,109,.11)}
+.next-cell{
+  min-width:116px;
+  text-align:left;
+}
+.next-cell strong{
+  display:block;
+  color:var(--mint);
+  font-size:20px;
+  line-height:1.05;
+  font-family:var(--mono);
+}
+.next-cell span{
+  display:block;
+  margin-top:4px;
+  color:#a9b7b1;
+  font-size:12px;
+}
+.progress{
+  height:4px;
+  border-radius:999px;
+  background:rgba(255,255,255,.12);
+  margin-top:11px;
+  overflow:hidden;
+}
+.progress > i{
+  display:block;
+  width:100%;
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(90deg,var(--mint),#87f4dd);
+  transition:width .7s linear;
+}
+.switch{
+  position:relative;
+  width:52px;
+  height:30px;
+  border:0;
+  border-radius:999px;
+  background:#43505a;
+  padding:0;
+  transition:background .18s ease;
+}
+.switch::after{
+  content:"";
+  position:absolute;
+  width:24px;
+  height:24px;
+  top:3px;
+  left:3px;
+  border-radius:50%;
+  background:#ffffff;
+  box-shadow:0 3px 12px rgba(0,0,0,.25);
+  transition:transform .18s ease;
+}
+.switch.on{background:var(--mint)}
+.switch.on::after{transform:translateX(22px)}
+.row-tools{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.tool-btn{
+  min-width:42px;
+  height:42px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:8px;
+  background:rgba(255,255,255,.06);
+  color:#dfe8e3;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding:0 11px;
+  font-size:13px;
+  font-weight:760;
+}
+.tool-btn:hover{border-color:rgba(81,222,192,.45);color:#ffffff}
+.tool-btn.delete{color:#ff9c95}
+.tool-btn.delete:hover{border-color:rgba(255,118,109,.5);background:rgba(255,118,109,.12)}
 
-.tog{width:40px;height:22px;border-radius:11px;border:none;background:var(--border2);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
-.tog.on{background:var(--green)}
-.tog::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
-.tog.on::after{transform:translateX(18px)}
+.empty{
+  min-height:250px;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  padding:36px 20px;
+  color:#9aa8a2;
+}
+.empty svg{margin:0 auto 16px;color:var(--mint)}
+.empty strong{display:block;color:#f7fffb;font-size:19px;margin-bottom:6px}
+.empty span{font-size:14px}
 
-.rinfo{flex:1;min-width:0}
-.rname{font-size:14px;font-weight:500;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rcard:not(.enabled) .rname{opacity:.4}
-.rmeta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:99px;font-family:var(--mono)}
-.b-mode{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(79,143,255,.15)}
-.b-fired{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,166,35,.15)}
+.toast{
+  position:fixed;
+  left:50%;
+  top:18px;
+  z-index:50;
+  width:min(420px,calc(100vw - 28px));
+  transform:translateX(-50%);
+  border:1px solid rgba(81,222,192,.45);
+  border-radius:8px;
+  background:#101820;
+  color:#f7fffb;
+  box-shadow:0 24px 80px rgba(0,0,0,.38);
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  animation:toastIn .25s ease both;
+}
+.toast strong{display:block;font-size:14px}
+.toast span{display:block;margin-top:3px;color:#aab9b3;font-size:12px}
+.toast button{
+  margin-left:auto;
+  width:30px;
+  height:30px;
+  border:0;
+  border-radius:8px;
+  background:rgba(255,255,255,.08);
+  color:#f7fffb;
+}
 
-.rnext{text-align:right;flex-shrink:0}
-.rnext-label{font-size:10px;color:var(--text3);margin-bottom:2px}
-.rnext-val{font-size:12px;font-weight:500;font-family:var(--mono);color:var(--green)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes rowIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes sweepGlow{0%,100%{opacity:.55}50%{opacity:.95}}
 
-.row-actions{display:flex;gap:4px;align-items:center;flex-shrink:0}
-.btn-test{background:var(--blue-bg);border:1px solid rgba(79,143,255,.2);color:var(--blue);font-family:var(--font);font-size:11px;font-weight:500;padding:4px 10px;border-radius:var(--radius-xs);cursor:pointer;transition:all .15s}
-.btn-test:hover{background:rgba(79,143,255,.15)}
-.btn-del{background:none;border:1px solid transparent;border-radius:var(--radius-xs);color:var(--text3);font-size:17px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1}
-.btn-del:hover{border-color:var(--red);color:var(--red)}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
+}
 
-/* PROGRESS BAR for countdown */
-.progress-wrap{height:2px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden;display:none}
-.rcard.enabled .progress-wrap{display:block}
-.progress-bar{height:100%;background:var(--green);border-radius:2px;transition:width .5s linear}
+@media (max-width:920px){
+  .hero-panel{grid-template-columns:1fr;padding:18px}
+  .mode-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mode-tab:nth-child(2n){border-right:0}
+  .mode-tab:nth-child(5){grid-column:1/-1;border-top:1px solid rgba(255,255,255,.12)}
+  .stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .reminder-row{grid-template-columns:5px 1fr auto;gap:12px}
+  .next-cell{grid-column:2;min-width:0}
+  .row-tools{grid-column:2/-1;justify-content:flex-start}
+}
 
-/* EMPTY */
-.empty{text-align:center;padding:60px 20px;color:var(--text3)}
-.empty-icon{font-size:40px;margin-bottom:12px;opacity:.5}
-.empty-text{font-size:14px}
-
-/* FOOTER */
-footer{text-align:center;padding:20px;font-size:11px;color:var(--text3);border-top:1px solid var(--border)}
+@media (max-width:620px){
+  .app-frame{padding:12px 10px 18px}
+  .topbar{align-items:flex-start}
+  .brand p{display:none}
+  .permission-copy span{display:none}
+  .permission-copy strong{font-size:13px}
+  .permission-btn{min-height:44px;padding:6px 9px}
+  .permission-icon{width:30px;height:30px}
+  .install-btn{width:44px;height:44px;min-height:44px}
+  .hero-panel{gap:16px;padding:14px}
+  .time-dial{width:min(100%,320px)}
+  .dial-readout strong{font-size:42px}
+  .text-field{min-height:92px;font-size:16px}
+  .composer-actions{flex-direction:column;align-items:stretch}
+  .stats-row{grid-template-columns:1fr}
+  .stat{min-height:76px}
+  .list-head{padding:0 12px}
+  .reminder-row{padding:14px 12px;grid-template-columns:5px 1fr auto}
+  .reminder-name{font-size:16px}
+  .tool-btn span{display:none}
+}
 </style>
 </head>
 <body>
+<div class="app-frame">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+      </div>
+      <div>
+        <h1>Notiminder</h1>
+        <p>Native reminders, tuned from one dial.</p>
+      </div>
+    </div>
 
-<div id="notif">
-  <div class="notif-inner">
-    <div class="notif-icon">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c87a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-      </svg>
+    <div class="top-actions">
+      <button class="install-btn hidden" id="installBtn" type="button" aria-label="Install app" title="Install app">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path>
+        </svg>
+      </button>
+      <button class="permission-btn" id="notifyBtn" type="button">
+        <span class="permission-icon" aria-hidden="true" id="notifyIcon">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 13c0 5-3.5 7-8 9-4.5-2-8-4-8-9V5l8-3 8 3v8Z"></path>
+            <path d="m9 12 2 2 4-5"></path>
+          </svg>
+        </span>
+        <span class="permission-copy">
+          <span>Native alerts</span>
+          <strong id="notifyState">Checking</strong>
+        </span>
+      </button>
     </div>
-    <div style="flex:1">
-      <div class="notif-label">Reminder</div>
-      <div class="notif-name" id="nname"></div>
-      <div class="notif-sub" id="nsub"></div>
-    </div>
-    <button class="notif-close" onclick="dimN()">×</button>
-  </div>
+  </header>
+
+  <main>
+    <section class="hero-panel" aria-label="Reminder composer">
+      <div class="dial-zone">
+        <button class="time-dial" id="timeDial" type="button" aria-label="Reminder time dial" aria-valuemin="0" aria-valuemax="1439" aria-valuenow="540">
+          <span class="dial-sweep" aria-hidden="true"></span>
+          <span class="dial-hand" id="dialHand" aria-hidden="true"></span>
+          <span class="dial-hub" aria-hidden="true"></span>
+          <span class="dial-number n0">00</span>
+          <span class="dial-number n15">15</span>
+          <span class="dial-number n30">30</span>
+          <span class="dial-number n45">45</span>
+          <span class="dial-readout">
+            <span>
+              <strong id="dialMain">30m</strong>
+              <span id="dialSub">Every 30 minutes</span>
+            </span>
+          </span>
+        </button>
+
+        <div class="dial-footer">
+          <div class="mini-stat">
+            <strong id="nextMini">No reminders</strong>
+            <span>next alert</span>
+          </div>
+          <div class="ampm" id="ampmGroup" aria-label="AM PM">
+            <button type="button" data-period="AM" class="active">AM</button>
+            <button type="button" data-period="PM">PM</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="composer-zone">
+        <div class="mode-tabs" role="tablist" aria-label="Schedule mode">
+          <button class="mode-tab active" type="button" data-mode="interval">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+            In
+          </button>
+          <button class="mode-tab" type="button" data-mode="specific">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h18"></path></svg>
+            At
+          </button>
+          <button class="mode-tab" type="button" data-mode="tpd">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v7h-7"></path></svg>
+            Daily
+          </button>
+          <button class="mode-tab" type="button" data-mode="random">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"></path><path d="M4 20 21 3"></path><path d="M21 16v5h-5"></path><path d="M15 15l6 6"></path><path d="M4 4l5 5"></path></svg>
+            Random
+          </button>
+          <button class="mode-tab" type="button" data-mode="ntimes-in-period">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7"></path><path d="M4 10V3"></path><path d="M12 21v-9"></path><path d="M12 8V3"></path><path d="M20 21v-5"></path><path d="M20 12V3"></path><path d="M2 14h4"></path><path d="M10 8h4"></path><path d="M18 16h4"></path></svg>
+            Custom
+          </button>
+        </div>
+
+        <textarea class="text-field" id="reminderName" maxlength="120" placeholder="What's the reminder for?"></textarea>
+
+        <div class="option-grid">
+          <div class="config active" id="config-interval">
+            <span class="field-label">Every</span>
+            <input type="number" id="intervalValue" value="30" min="1" max="9999" inputmode="numeric">
+            <select id="intervalUnit" aria-label="Interval unit">
+              <option value="minutes">minutes</option>
+              <option value="hours">hours</option>
+              <option value="seconds">seconds</option>
+            </select>
+          </div>
+
+          <div class="config" id="config-specific">
+            <span class="field-label">Daily at</span>
+            <input type="time" id="specificTime" value="09:00">
+          </div>
+
+          <div class="config" id="config-tpd">
+            <input type="number" id="timesPerDay" value="4" min="1" max="48" inputmode="numeric">
+            <span class="field-label">times per day from 8 AM to 10 PM</span>
+          </div>
+
+          <div class="config" id="config-random">
+            <input type="number" id="randomCount" value="6" min="1" max="100" inputmode="numeric">
+            <span class="field-label">random alerts between</span>
+            <input type="time" id="randomStart" value="08:00">
+            <span class="field-label">and</span>
+            <input type="time" id="randomEnd" value="22:00">
+          </div>
+
+          <div class="config" id="config-ntimes-in-period">
+            <input type="number" id="periodCount" value="4" min="1" max="60" inputmode="numeric">
+            <span class="field-label">times every</span>
+            <input type="number" id="periodDuration" value="1" min="1" max="60" inputmode="numeric">
+            <select id="periodUnit" aria-label="Period unit">
+              <option value="hour">hour</option>
+              <option value="minute">minute</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="composer-actions">
+          <button class="ghost-btn" id="testComposerBtn" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
+            Test native alert
+          </button>
+          <button class="add-btn" id="addBtn" type="button">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path><path d="M12 19v3"></path><path d="M9 22h6"></path><path d="M19 19v-4"></path><path d="M17 17h4"></path></svg>
+            Add Reminder
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats-row" aria-label="Reminder stats">
+      <div class="stat">
+        <span class="stat-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11 12 14 22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></span>
+        <span class="stat-copy"><strong id="activeStat">0</strong><span>active</span></span>
+      </div>
+      <div class="stat coral">
+        <span class="stat-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span>
+        <span class="stat-copy"><strong id="firedStat">0</strong><span>fired today</span></span>
+      </div>
+      <div class="stat blue">
+        <span class="stat-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="m17 5-5-3-5 3"></path><path d="m17 19-5 3-5-3"></path></svg></span>
+        <span class="stat-copy"><strong id="totalStat">0</strong><span>total</span></span>
+      </div>
+      <div class="stat">
+        <span class="stat-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l4 2"></path></svg></span>
+        <span class="stat-copy"><strong id="nextStat">--</strong><span>next</span></span>
+      </div>
+    </section>
+
+    <section class="list-panel" aria-label="Active reminders">
+      <div class="list-head">
+        <div class="list-title">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          Active Reminders
+          <span class="count-chip" id="listCount">0</span>
+        </div>
+        <button class="ghost-btn" id="clearBtn" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg>
+          Clear
+        </button>
+      </div>
+      <div class="reminder-list" id="reminderList"></div>
+      <div class="empty" id="emptyState">
+        <div>
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <strong>No reminders yet</strong>
+          <span>Create one and allow native alerts.</span>
+        </div>
+      </div>
+    </section>
+  </main>
 </div>
 
-<nav>
-  <div class="logo">
-    <div class="logo-icon">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d0f14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-      </svg>
-    </div>
-    <span class="logo-text">RemindMe</span>
-  </div>
-  <div class="nav-right">
-    <div class="pill" id="nav-badge">0 active</div>
-  </div>
-</nav>
-
-<main>
-
-  <!-- STATS -->
-  <div class="stats">
-    <div class="stat s-green">
-      <div class="stat-num" id="s-active">0</div>
-      <div class="stat-label">Active reminders</div>
-    </div>
-    <div class="stat s-amber">
-      <div class="stat-num" id="s-fired">0</div>
-      <div class="stat-label">Fired today</div>
-    </div>
-    <div class="stat s-blue">
-      <div class="stat-num" id="s-total">0</div>
-      <div class="stat-label">Total reminders</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num" id="s-next" style="font-size:16px;padding-top:4px">—</div>
-      <div class="stat-label">Next reminder</div>
-    </div>
-  </div>
-
-  <!-- ADD CARD -->
-  <div class="add-card">
-    <div class="section-head">Add reminder</div>
-
-    <div style="margin-bottom:12px">
-      <input type="text" id="rname" placeholder="What do you want to be reminded about?"/>
-    </div>
-
-    <div class="mode-tabs">
-      <button class="mtab on" data-m="interval" onclick="pickMode(this)">Every N min/hr</button>
-      <button class="mtab" data-m="tpd" onclick="pickMode(this)">N times / day</button>
-      <button class="mtab" data-m="random" onclick="pickMode(this)">Random times</button>
-      <button class="mtab" data-m="specific" onclick="pickMode(this)">Specific time</button>
-      <button class="mtab" data-m="ntimes-in-period" onclick="pickMode(this)">N times in 1 hr/min</button>
-    </div>
-
-    <!-- INTERVAL -->
-    <div class="cfg on" id="cfg-interval">
-      <span class="field-label">Every</span>
-      <input type="number" id="iv" value="30" min="1" max="9999"/>
-      <select id="iu">
-        <option value="minutes">minutes</option>
-        <option value="hours">hours</option>
-        <option value="seconds">seconds</option>
-      </select>
-    </div>
-
-    <!-- TIMES PER DAY -->
-    <div class="cfg" id="cfg-tpd">
-      <input type="number" id="tpd" value="4" min="1" max="48"/>
-      <span class="field-label">times/day, spread evenly 8 am – 10 pm</span>
-    </div>
-
-    <!-- RANDOM -->
-    <div class="cfg" id="cfg-random">
-      <input type="number" id="rc" value="6" min="1" max="100"/>
-      <span class="field-label">random times between</span>
-      <input type="time" id="rs" value="08:00"/>
-      <span class="field-label">and</span>
-      <input type="time" id="re" value="22:00"/>
-    </div>
-
-    <!-- SPECIFIC -->
-    <div class="cfg" id="cfg-specific">
-      <span class="field-label">Daily at exactly</span>
-      <input type="time" id="st" value="09:00"/>
-    </div>
-
-    <!-- N TIMES IN PERIOD -->
-    <div class="cfg" id="cfg-ntimes-in-period">
-      <input type="number" id="np" value="4" min="1" max="60"/>
-      <span class="field-label">times every</span>
-      <input type="number" id="np-dur" value="1" min="1" max="60"/>
-      <select id="np-unit">
-        <option value="hour">hour</option>
-        <option value="minute">minute</option>
-      </select>
-      <span class="field-label">(evenly spaced)</span>
-    </div>
-
-    <button class="btn-add" onclick="addR()">+ Add reminder</button>
-  </div>
-
-  <!-- LIST -->
-  <div id="list-wrap">
-    <div class="list-head">
-      <span class="list-title" id="list-title">0 reminders</span>
-      <button class="btn-clear" onclick="clearAll()">Clear all</button>
-    </div>
-    <div id="rlist"></div>
-    <div class="empty" id="empty">
-      <div class="empty-icon">🔔</div>
-      <div class="empty-text">No reminders yet. Add one above to get started.</div>
-    </div>
-  </div>
-
-</main>
-
-<footer>RemindMe · vibration &amp; sound alerts · all data stored locally</footer>
+<div class="toast hidden" id="toast" role="status" aria-live="polite">
+  <span class="permission-icon" aria-hidden="true">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+  </span>
+  <span>
+    <strong id="toastTitle">Reminder</strong>
+    <span id="toastBody">Alert fired.</span>
+  </span>
+  <button id="toastClose" type="button" aria-label="Dismiss">x</button>
+</div>
 
 <script>
-let rs=[],mode='interval',ntimer=null,ntimer2=null;
-const SK='remindme-v4';
+const STORAGE_KEY = "notiminder-v2";
+const OLD_STORAGE_KEY = "remindme-v4";
 
-// ── STORAGE ──────────────────────────────────────────────
-async function load(){
-  try{const r=await window.storage.get(SK);if(r&&r.value)rs=JSON.parse(r.value);}catch(e){rs=[];}
-  rs.forEach(r=>{if(r.enabled&&r.nft&&r.nft<Date.now())r.nft=nextFire(r);});
-  render();updateStats();
-}
-async function save(){try{await window.storage.set(SK,JSON.stringify(rs));}catch(e){}}
+const els = {
+  notifyBtn: document.getElementById("notifyBtn"),
+  notifyState: document.getElementById("notifyState"),
+  installBtn: document.getElementById("installBtn"),
+  timeDial: document.getElementById("timeDial"),
+  dialMain: document.getElementById("dialMain"),
+  dialSub: document.getElementById("dialSub"),
+  nextMini: document.getElementById("nextMini"),
+  ampmGroup: document.getElementById("ampmGroup"),
+  reminderName: document.getElementById("reminderName"),
+  addBtn: document.getElementById("addBtn"),
+  testComposerBtn: document.getElementById("testComposerBtn"),
+  clearBtn: document.getElementById("clearBtn"),
+  list: document.getElementById("reminderList"),
+  empty: document.getElementById("emptyState"),
+  listCount: document.getElementById("listCount"),
+  activeStat: document.getElementById("activeStat"),
+  firedStat: document.getElementById("firedStat"),
+  totalStat: document.getElementById("totalStat"),
+  nextStat: document.getElementById("nextStat"),
+  toast: document.getElementById("toast"),
+  toastTitle: document.getElementById("toastTitle"),
+  toastBody: document.getElementById("toastBody"),
+  toastClose: document.getElementById("toastClose"),
+  intervalValue: document.getElementById("intervalValue"),
+  intervalUnit: document.getElementById("intervalUnit"),
+  specificTime: document.getElementById("specificTime"),
+  timesPerDay: document.getElementById("timesPerDay"),
+  randomCount: document.getElementById("randomCount"),
+  randomStart: document.getElementById("randomStart"),
+  randomEnd: document.getElementById("randomEnd"),
+  periodCount: document.getElementById("periodCount"),
+  periodDuration: document.getElementById("periodDuration"),
+  periodUnit: document.getElementById("periodUnit")
+};
 
-// ── HELPERS ───────────────────────────────────────────────
-function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
-function fmtNext(ts){
-  if(!ts)return'—';
-  const d=ts-Date.now();
-  if(d<=0)return'now';
-  if(d<60000)return Math.round(d/1000)+'s';
-  if(d<3600000)return Math.round(d/60000)+'m';
-  const dt=new Date(ts);
-  return pad(dt.getHours())+':'+pad(dt.getMinutes());
-}
-function pad(n){return String(n).padStart(2,'0');}
-function timeMs(t){const[h,m]=(t||'00:00').split(':').map(Number);return h*3600000+m*60000;}
+let reminders = [];
+let currentMode = "interval";
+let dialMinutes = 9 * 60;
+let toastTimer = 0;
+let swRegistration = null;
+let deferredInstallPrompt = null;
+let tickLocked = false;
 
-function genRQ(r,base){
-  const d=new Date(base);
-  const mid=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
-  const ws=mid+timeMs(r.ws||'08:00'),we=mid+timeMs(r.we||'22:00');
-  const a=[];for(let i=0;i<(r.rc||6);i++)a.push(ws+Math.random()*(we-ws));
-  return a.sort((a,b)=>a-b);
-}
+const icons = {
+  play: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>',
+  trash: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg>'
+};
 
-function nextFire(r,from){
-  const now=from||Date.now();
-  if(r.mode==='interval'){
-    const u=r.iu;
-    const ms=u==='hours'?r.iv*3600000:u==='seconds'?r.iv*1000:r.iv*60000;
-    return now+ms;
-  }
-  if(r.mode==='tpd'){
-    const d=new Date(now);
-    const mid=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
-    const ws=mid+8*3600000,we=mid+22*3600000,slot=(we-ws)/r.tpd;
-    for(let i=0;i<r.tpd;i++){const t=ws+slot*i;if(t>now)return t;}
-    return ws+86400000;
-  }
-  if(r.mode==='random'){
-    if(!r.rq||!r.rq.length)r.rq=genRQ(r,now);
-    const nx=r.rq.find(t=>t>now);
-    if(nx)return nx;
-    r.rq=genRQ(r,now+86400000);
-    return r.rq[0]||now+3600000;
-  }
-  if(r.mode==='specific'){
-    const[h,m]=r.stime.split(':').map(Number);
-    const d=new Date(now);
-    let t=new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,m).getTime();
-    if(t<=now)t+=86400000;
-    return t;
-  }
-  if(r.mode==='ntimes-in-period'){
-    const periodMs=r.npUnit==='hour'?r.npDur*3600000:r.npDur*60000;
-    const slotMs=periodMs/r.np;
-    return now+slotMs;
-  }
-  return now+3600000;
+function secureForServiceWorker(){
+  return location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1";
 }
 
-function schedDesc(r){
-  if(r.mode==='interval')return`Every ${r.iv} ${r.iu}`;
-  if(r.mode==='tpd')return`${r.tpd}× daily (8am–10pm)`;
-  if(r.mode==='random')return`${r.rc}× random (${r.ws}–${r.we})`;
-  if(r.mode==='specific')return`Daily at ${r.stime}`;
-  if(r.mode==='ntimes-in-period')return`${r.np}× per ${r.npDur>1?r.npDur+' ':''}${r.npUnit}`;
-  return'';
-}
-
-// ── UI CONTROLS ───────────────────────────────────────────
-function pickMode(btn){
-  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');mode=btn.dataset.m;
-  document.querySelectorAll('.cfg').forEach(el=>el.classList.remove('on'));
-  document.getElementById('cfg-'+mode).classList.add('on');
-}
-
-function addR(){
-  const nm=document.getElementById('rname').value.trim();
-  if(!nm){document.getElementById('rname').focus();return;}
-  const r={id:genId(),name:nm,mode,enabled:true,firedToday:0,ftDate:new Date().toDateString()};
-  if(mode==='interval'){r.iv=+document.getElementById('iv').value||30;r.iu=document.getElementById('iu').value;}
-  if(mode==='tpd'){r.tpd=+document.getElementById('tpd').value||4;}
-  if(mode==='random'){r.rc=+document.getElementById('rc').value||6;r.ws=document.getElementById('rs').value;r.we=document.getElementById('re').value;r.rq=genRQ(r,Date.now());}
-  if(mode==='specific'){r.stime=document.getElementById('st').value;}
-  if(mode==='ntimes-in-period'){r.np=+document.getElementById('np').value||4;r.npDur=+document.getElementById('np-dur').value||1;r.npUnit=document.getElementById('np-unit').value;}
-  r.nft=nextFire(r);
-  rs.push(r);
-  document.getElementById('rname').value='';
-  save();render();updateStats();
-}
-
-function toggleR(id){
-  const r=rs.find(x=>x.id===id);if(!r)return;
-  r.enabled=!r.enabled;
-  if(r.enabled){if(r.mode==='random')r.rq=genRQ(r,Date.now());r.nft=nextFire(r);}
-  save();render();updateStats();
-}
-
-function delR(id){rs=rs.filter(x=>x.id!==id);save();render();updateStats();}
-function clearAll(){if(confirm('Delete all reminders?')){rs=[];save();render();updateStats();}}
-function testR(id){const r=rs.find(x=>x.id===id);if(r)fireR(r,true);}
-
-// ── RENDER ────────────────────────────────────────────────
-function render(){
-  const el=document.getElementById('rlist'),em=document.getElementById('empty');
-  const lt=document.getElementById('list-title');
-  lt.textContent=`${rs.length} reminder${rs.length!==1?'s':''}`;
-  if(!rs.length){el.innerHTML='';em.style.display='block';return;}
-  em.style.display='none';
-  el.innerHTML=rs.map(r=>{
-    const today=new Date().toDateString();
-    if(r.ftDate!==today){r.firedToday=0;r.ftDate=today;}
-    const en=r.enabled;
-    return`<div class="rcard${en?' enabled':''}" id="card-${r.id}">
-      <button class="tog${en?' on':''}" onclick="toggleR('${r.id}')"></button>
-      <div class="rinfo">
-        <div class="rname">${r.name}</div>
-        <div class="rmeta">
-          <span class="badge b-mode">${schedDesc(r)}</span>
-          <span class="badge b-fired">fired today: ${r.firedToday||0}</span>
-        </div>
-        <div class="progress-wrap"><div class="progress-bar" id="pb-${r.id}" style="width:100%"></div></div>
-      </div>
-      ${en?`<div class="rnext"><div class="rnext-label">next</div><div class="rnext-val" id="nxt-${r.id}">${fmtNext(r.nft)}</div></div>`:''}
-      <div class="row-actions">
-        <button class="btn-test" onclick="testR('${r.id}')">Test</button>
-        <button class="btn-del" onclick="delR('${r.id}')" title="Delete">×</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function updateStats(){
-  const today=new Date().toDateString();
-  const active=rs.filter(r=>r.enabled).length;
-  const fired=rs.reduce((s,r)=>s+(r.ftDate===today?r.firedToday||0:0),0);
-  document.getElementById('s-active').textContent=active;
-  document.getElementById('s-fired').textContent=fired;
-  document.getElementById('s-total').textContent=rs.length;
-  document.getElementById('nav-badge').textContent=active+' active';
-
-  const nxt=rs.filter(r=>r.enabled&&r.nft).sort((a,b)=>a.nft-b.nft)[0];
-  document.getElementById('s-next').textContent=nxt?fmtNext(nxt.nft):'—';
-}
-
-// ── SOUND ────────────────────────────────────────────────
-function chime(){
+async function registerServiceWorker(){
+  if(!("serviceWorker" in navigator) || !secureForServiceWorker()) return null;
   try{
-    const ctx=new(window.AudioContext||window.webkitAudioContext)();
-    [[523.25,0],[659.25,.14],[783.99,.28],[1046.5,.44]].forEach(([f,t])=>{
-      const o=ctx.createOscillator(),g=ctx.createGain();
-      o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=f;
-      g.gain.setValueAtTime(0,ctx.currentTime+t);
-      g.gain.linearRampToValueAtTime(.25,ctx.currentTime+t+.05);
-      g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+.55);
-      o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.6);
-    });
-  }catch(e){}
+    swRegistration = await navigator.serviceWorker.register("./sw.js");
+    return swRegistration;
+  }catch(err){
+    return null;
+  }
 }
 
-function vib(){try{navigator.vibrate&&navigator.vibrate([180,80,180,80,320]);}catch(e){}}
-
-// ── FIRE ──────────────────────────────────────────────────
-function fireR(r,isTest){
-  const today=new Date().toDateString();
-  if(r.ftDate!==today){r.firedToday=0;r.ftDate=today;}
-  r.firedToday=(r.firedToday||0)+1;
-  if(!isTest)r.nft=nextFire(r,Date.now()+200);
-  save();render();updateStats();
-
-  // Flash card
-  const card=document.getElementById('card-'+r.id);
-  if(card){card.classList.add('firing');setTimeout(()=>card.classList.remove('firing'),2000);}
-
-  showNotif(r);chime();vib();
+async function getReadyRegistration(){
+  if(!("serviceWorker" in navigator) || !secureForServiceWorker()) return null;
+  if(!swRegistration) await registerServiceWorker();
+  try{
+    return await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise(resolve => setTimeout(() => resolve(swRegistration), 900))
+    ]);
+  }catch(err){
+    return swRegistration;
+  }
 }
 
-// ── NOTIFICATION ──────────────────────────────────────────
-function showNotif(r){
-  clearTimeout(ntimer);clearTimeout(ntimer2);
-  document.getElementById('nname').textContent=r.name;
-  document.getElementById('nsub').textContent=schedDesc(r)+' · fired today: '+((r.firedToday)||1);
-  const el=document.getElementById('notif');
-  el.style.display='block';
-  ntimer=setTimeout(dimN,12000);
-}
-function dimN(){
-  const el=document.getElementById('notif');
-  el.style.opacity='0';el.style.transition='opacity .3s';
-  ntimer2=setTimeout(()=>{el.style.display='none';el.style.opacity='';el.style.transition='';},300);
+function notificationSupportState(){
+  if(!("Notification" in window)) return "unsupported";
+  if(!window.isSecureContext && location.protocol !== "file:") return "insecure";
+  return Notification.permission;
 }
 
-// ── SCHEDULER ────────────────────────────────────────────
-function tick(){
-  const now=Date.now();
-  rs.forEach(r=>{
-    if(r.enabled&&r.nft&&r.nft<=now)fireR(r);
-  });
-  // Update countdowns + progress bars
-  rs.forEach(r=>{
-    if(!r.enabled)return;
-    const ne=document.getElementById('nxt-'+r.id);
-    if(ne)ne.textContent=fmtNext(r.nft);
-    const pb=document.getElementById('pb-'+r.id);
-    if(pb&&r.nft&&r.lastFire){
-      const total=r.nft-r.lastFire,remain=r.nft-now;
-      pb.style.width=Math.max(0,Math.min(100,(remain/total)*100))+'%';
+function updateNotificationUI(){
+  const state = notificationSupportState();
+  if(state === "granted") els.notifyState.textContent = "Allowed";
+  else if(state === "denied") els.notifyState.textContent = "Blocked";
+  else if(state === "unsupported") els.notifyState.textContent = "Unavailable";
+  else if(state === "insecure") els.notifyState.textContent = "Needs HTTPS";
+  else els.notifyState.textContent = "Tap to allow";
+}
+
+async function requestNativeNotifications(){
+  if(!("Notification" in window)){
+    showToast("Native alerts unavailable", "This browser does not expose the Notification API.");
+    updateNotificationUI();
+    return false;
+  }
+
+  if(notificationSupportState() === "insecure"){
+    showToast("Use localhost or HTTPS", "Native alerts need a secure browser context.");
+    updateNotificationUI();
+    return false;
+  }
+
+  let result = Notification.permission;
+  if(result === "default") result = await Notification.requestPermission();
+  updateNotificationUI();
+
+  if(result === "granted"){
+    await registerServiceWorker();
+    await showNativeNotification({
+      id: "ready",
+      name: "Notiminder alerts are ready",
+      mode: "system",
+      firedToday: 0
+    }, true);
+    return true;
+  }
+
+  if(result === "denied") showToast("Notifications blocked", "Allow Notiminder in browser settings to use native alerts.");
+  return false;
+}
+
+async function showNativeNotification(reminder, isTest){
+  if(!("Notification" in window) || Notification.permission !== "granted") return false;
+
+  const title = isTest && reminder.id !== "ready" ? "Test: " + reminder.name : reminder.name;
+  const body = reminder.id === "ready"
+    ? "Real browser notifications are enabled."
+    : (schedDesc(reminder) + " - " + (isTest ? "test alert" : "fired today: " + (reminder.firedToday || 0)));
+
+  const options = {
+    body,
+    tag: "notiminder-" + reminder.id,
+    renotify: true,
+    icon: "./icon-192.png",
+    badge: "./icon-192.png",
+    vibrate: [160, 70, 160],
+    data: { id: reminder.id, url: location.href },
+    actions: [{ action: "open", title: "Open" }]
+  };
+
+  const registration = await getReadyRegistration();
+  try{
+    if(registration && registration.showNotification){
+      await registration.showNotification(title, options);
+      return true;
+    }
+  }catch(err){}
+
+  try{
+    new Notification(title, options);
+    return true;
+  }catch(err){
+    return false;
+  }
+}
+
+function showToast(title, body){
+  clearTimeout(toastTimer);
+  els.toastTitle.textContent = title;
+  els.toastBody.textContent = body;
+  els.toast.classList.remove("hidden");
+  toastTimer = setTimeout(hideToast, 6500);
+}
+
+function hideToast(){
+  els.toast.classList.add("hidden");
+}
+
+function storeRead(key){
+  try{
+    return localStorage.getItem(key);
+  }catch(err){
+    return null;
+  }
+}
+
+function storeWrite(key, value){
+  try{
+    localStorage.setItem(key, value);
+  }catch(err){}
+}
+
+async function loadReminders(){
+  let raw = storeRead(STORAGE_KEY) || storeRead(OLD_STORAGE_KEY);
+  if(!raw && window.storage && window.storage.get){
+    try{
+      const old = await window.storage.get(OLD_STORAGE_KEY);
+      raw = old && old.value;
+    }catch(err){}
+  }
+
+  try{
+    reminders = raw ? JSON.parse(raw) : [];
+  }catch(err){
+    reminders = [];
+  }
+
+  reminders = reminders.map(normalizeReminder).filter(Boolean);
+  const now = Date.now();
+  reminders.forEach(reminder => {
+    resetDailyCount(reminder);
+    if(reminder.enabled && (!reminder.nft || reminder.nft <= now)){
+      scheduleNext(reminder, now);
     }
   });
+  saveReminders();
+  render();
   updateStats();
 }
 
-// Patch fireR to record lastFire
-const _fireR=fireR;
-window.fireR=function(r,isTest){
-  if(!isTest)r.lastFire=Date.now();
-  _fireR(r,isTest);
-};
+function saveReminders(){
+  storeWrite(STORAGE_KEY, JSON.stringify(reminders));
+  if(window.storage && window.storage.set){
+    window.storage.set(STORAGE_KEY, JSON.stringify(reminders)).catch(() => {});
+  }
+}
 
-setInterval(tick,1000);
-load();
+function normalizeReminder(reminder){
+  if(!reminder || !reminder.id || !reminder.name) return null;
+  const mode = reminder.mode || "interval";
+  const normalized = {
+    id: String(reminder.id),
+    name: String(reminder.name),
+    mode,
+    enabled: reminder.enabled !== false,
+    firedToday: Number(reminder.firedToday || 0),
+    ftDate: reminder.ftDate || todayKey(),
+    createdAt: Number(reminder.createdAt || Date.now()),
+    lastFire: Number(reminder.lastFire || Date.now()),
+    nft: Number(reminder.nft || 0)
+  };
+
+  if(mode === "interval"){
+    normalized.iv = clampNumber(reminder.iv, 1, 9999, 30);
+    normalized.iu = ["seconds","minutes","hours"].includes(reminder.iu) ? reminder.iu : "minutes";
+  }
+  if(mode === "tpd") normalized.tpd = clampNumber(reminder.tpd, 1, 48, 4);
+  if(mode === "random"){
+    normalized.rc = clampNumber(reminder.rc, 1, 100, 6);
+    normalized.ws = validTime(reminder.ws) ? reminder.ws : "08:00";
+    normalized.we = validTime(reminder.we) ? reminder.we : "22:00";
+    normalized.rq = Array.isArray(reminder.rq) ? reminder.rq.map(Number).filter(Boolean) : [];
+  }
+  if(mode === "specific") normalized.stime = validTime(reminder.stime) ? reminder.stime : "09:00";
+  if(mode === "ntimes-in-period"){
+    normalized.np = clampNumber(reminder.np, 1, 60, 4);
+    normalized.npDur = clampNumber(reminder.npDur, 1, 60, 1);
+    normalized.npUnit = reminder.npUnit === "minute" ? "minute" : "hour";
+  }
+  return normalized;
+}
+
+function clampNumber(value, min, max, fallback){
+  const num = Number(value);
+  if(!Number.isFinite(num)) return fallback;
+  return Math.max(min, Math.min(max, Math.round(num)));
+}
+
+function validTime(value){
+  return typeof value === "string" && /^\d{2}:\d{2}$/.test(value);
+}
+
+function genId(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function todayKey(){
+  return new Date().toDateString();
+}
+
+function resetDailyCount(reminder){
+  const today = todayKey();
+  if(reminder.ftDate !== today){
+    reminder.firedToday = 0;
+    reminder.ftDate = today;
+  }
+}
+
+function pad(value){
+  return String(value).padStart(2, "0");
+}
+
+function parseTime(value){
+  if(!validTime(value)) return 0;
+  const parts = value.split(":").map(Number);
+  return parts[0] * 60 + parts[1];
+}
+
+function minutesToInput(minutes){
+  const normalized = ((minutes % 1440) + 1440) % 1440;
+  return pad(Math.floor(normalized / 60)) + ":" + pad(normalized % 60);
+}
+
+function formatClock(minutes){
+  const normalized = ((minutes % 1440) + 1440) % 1440;
+  const h24 = Math.floor(normalized / 60);
+  const mins = normalized % 60;
+  const suffix = h24 >= 12 ? "PM" : "AM";
+  const h12 = h24 % 12 || 12;
+  return h12 + ":" + pad(mins) + " " + suffix;
+}
+
+function timeMs(value){
+  return parseTime(value) * 60000;
+}
+
+function intervalMs(reminder){
+  const value = clampNumber(reminder.iv, 1, 9999, 30);
+  if(reminder.iu === "hours") return value * 3600000;
+  if(reminder.iu === "seconds") return value * 1000;
+  return value * 60000;
+}
+
+function generateRandomQueue(reminder, base){
+  const d = new Date(base);
+  const midnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  let start = midnight + timeMs(reminder.ws || "08:00");
+  let end = midnight + timeMs(reminder.we || "22:00");
+  if(end <= start) end += 86400000;
+  const count = clampNumber(reminder.rc, 1, 100, 6);
+  return Array.from({ length: count }, () => start + Math.random() * (end - start)).sort((a,b) => a - b);
+}
+
+function nextFire(reminder, from = Date.now()){
+  if(reminder.mode === "interval") return from + intervalMs(reminder);
+
+  if(reminder.mode === "tpd"){
+    const d = new Date(from);
+    const midnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const start = midnight + 8 * 3600000;
+    const end = midnight + 22 * 3600000;
+    const count = clampNumber(reminder.tpd, 1, 48, 4);
+    const slot = (end - start) / count;
+    for(let i = 0; i < count; i += 1){
+      const candidate = start + slot * i;
+      if(candidate > from) return candidate;
+    }
+    return start + 86400000;
+  }
+
+  if(reminder.mode === "random"){
+    if(!Array.isArray(reminder.rq) || !reminder.rq.length) reminder.rq = generateRandomQueue(reminder, from);
+    const next = reminder.rq.find(time => time > from);
+    if(next) return next;
+    reminder.rq = generateRandomQueue(reminder, from + 86400000);
+    return reminder.rq[0] || from + 3600000;
+  }
+
+  if(reminder.mode === "specific"){
+    const [hours, minutes] = (reminder.stime || "09:00").split(":").map(Number);
+    const d = new Date(from);
+    let candidate = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hours, minutes, 0, 0).getTime();
+    if(candidate <= from) candidate += 86400000;
+    return candidate;
+  }
+
+  if(reminder.mode === "ntimes-in-period"){
+    const periodMs = reminder.npUnit === "minute" ? reminder.npDur * 60000 : reminder.npDur * 3600000;
+    return from + periodMs / Math.max(1, reminder.np);
+  }
+
+  return from + 3600000;
+}
+
+function scheduleNext(reminder, from = Date.now()){
+  reminder.lastFire = from;
+  reminder.nft = nextFire(reminder, from);
+}
+
+function schedDesc(reminder){
+  if(reminder.mode === "interval") return "Every " + reminder.iv + " " + reminder.iu;
+  if(reminder.mode === "tpd") return reminder.tpd + " times daily";
+  if(reminder.mode === "random") return reminder.rc + " random alerts, " + reminder.ws + "-" + reminder.we;
+  if(reminder.mode === "specific") return "Daily at " + formatClock(parseTime(reminder.stime));
+  if(reminder.mode === "ntimes-in-period"){
+    const unit = reminder.npUnit;
+    return reminder.np + " times every " + reminder.npDur + " " + unit + (reminder.npDur === 1 ? "" : "s");
+  }
+  return "Reminder";
+}
+
+function fmtRemaining(ts){
+  if(!ts) return "--";
+  const diff = ts - Date.now();
+  if(diff <= 0) return "now";
+  if(diff < 60000) return Math.max(1, Math.ceil(diff / 1000)) + "s";
+  if(diff < 3600000) return Math.ceil(diff / 60000) + "m";
+  if(diff < 86400000) return Math.ceil(diff / 3600000) + "h";
+  return Math.ceil(diff / 86400000) + "d";
+}
+
+function fmtNextLabel(ts){
+  if(!ts) return "--";
+  const diff = ts - Date.now();
+  if(diff < 0) return "now";
+  if(diff < 86400000) return formatClock(new Date(ts).getHours() * 60 + new Date(ts).getMinutes());
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function escapeHtml(value){
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  })[char]);
+}
+
+function currentFormReminder(){
+  const name = els.reminderName.value.trim() || "Test reminder";
+  const reminder = {
+    id: genId(),
+    name,
+    mode: currentMode,
+    enabled: true,
+    firedToday: 0,
+    ftDate: todayKey(),
+    createdAt: Date.now()
+  };
+
+  if(currentMode === "interval"){
+    reminder.iv = clampNumber(els.intervalValue.value, 1, 9999, 30);
+    reminder.iu = els.intervalUnit.value;
+  }
+  if(currentMode === "specific") reminder.stime = els.specificTime.value || "09:00";
+  if(currentMode === "tpd") reminder.tpd = clampNumber(els.timesPerDay.value, 1, 48, 4);
+  if(currentMode === "random"){
+    reminder.rc = clampNumber(els.randomCount.value, 1, 100, 6);
+    reminder.ws = els.randomStart.value || "08:00";
+    reminder.we = els.randomEnd.value || "22:00";
+    reminder.rq = generateRandomQueue(reminder, Date.now());
+  }
+  if(currentMode === "ntimes-in-period"){
+    reminder.np = clampNumber(els.periodCount.value, 1, 60, 4);
+    reminder.npDur = clampNumber(els.periodDuration.value, 1, 60, 1);
+    reminder.npUnit = els.periodUnit.value === "minute" ? "minute" : "hour";
+  }
+
+  scheduleNext(reminder, Date.now());
+  return reminder;
+}
+
+async function addReminder(){
+  const name = els.reminderName.value.trim();
+  if(!name){
+    els.reminderName.focus();
+    showToast("Name the reminder", "Add a short title before saving.");
+    return;
+  }
+
+  const reminder = currentFormReminder();
+  reminders.push(reminder);
+  els.reminderName.value = "";
+  saveReminders();
+  render();
+  updateStats();
+
+  if(notificationSupportState() === "default") await requestNativeNotifications();
+}
+
+function setMode(mode){
+  currentMode = mode;
+  document.querySelectorAll(".mode-tab").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.mode === mode);
+  });
+  document.querySelectorAll(".config").forEach(config => {
+    config.classList.toggle("active", config.id === "config-" + mode);
+  });
+  updateDial();
+}
+
+function setSpecificFromDial(minutes){
+  dialMinutes = ((minutes % 1440) + 1440) % 1440;
+  els.specificTime.value = minutesToInput(dialMinutes);
+  updateAmpm();
+}
+
+function updateAmpm(){
+  const period = dialMinutes >= 720 ? "PM" : "AM";
+  els.ampmGroup.querySelectorAll("button").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.period === period);
+  });
+}
+
+function updateDial(){
+  let angle = 180;
+  let main = "30m";
+  let sub = "Every 30 minutes";
+  let valueNow = 0;
+  let valueMax = 1439;
+
+  if(currentMode === "interval"){
+    const value = clampNumber(els.intervalValue.value, 1, 9999, 30);
+    const unit = els.intervalUnit.value;
+    const unitText = unit === "seconds" ? "s" : unit === "hours" ? "h" : "m";
+    const mod = unit === "hours" ? 12 : unit === "seconds" ? 60 : 120;
+    angle = (value % mod) / mod * 360;
+    main = value + unitText;
+    sub = "Every " + value + " " + unit;
+    valueNow = value;
+    valueMax = mod;
+  }
+
+  if(currentMode === "specific"){
+    dialMinutes = parseTime(els.specificTime.value || "09:00");
+    angle = (dialMinutes % 720) / 720 * 360;
+    main = formatClock(dialMinutes);
+    sub = "Daily alert";
+    valueNow = dialMinutes;
+    valueMax = 1439;
+  }
+
+  if(currentMode === "tpd"){
+    const count = clampNumber(els.timesPerDay.value, 1, 48, 4);
+    angle = count / 48 * 360;
+    main = count + "/day";
+    sub = "8 AM to 10 PM";
+    valueNow = count;
+    valueMax = 48;
+  }
+
+  if(currentMode === "random"){
+    const count = clampNumber(els.randomCount.value, 1, 100, 6);
+    angle = count / 100 * 360;
+    main = count + "x";
+    sub = els.randomStart.value + "-" + els.randomEnd.value;
+    valueNow = count;
+    valueMax = 100;
+  }
+
+  if(currentMode === "ntimes-in-period"){
+    const count = clampNumber(els.periodCount.value, 1, 60, 4);
+    const duration = clampNumber(els.periodDuration.value, 1, 60, 1);
+    const unit = els.periodUnit.value;
+    angle = count / 60 * 360;
+    main = count + "x";
+    sub = "Every " + duration + " " + unit + (duration === 1 ? "" : "s");
+    valueNow = count;
+    valueMax = 60;
+  }
+
+  els.timeDial.style.setProperty("--dial-angle", angle + "deg");
+  els.dialMain.textContent = main;
+  els.dialSub.textContent = sub;
+  els.timeDial.setAttribute("aria-valuenow", String(Math.round(valueNow)));
+  els.timeDial.setAttribute("aria-valuemax", String(valueMax));
+  updateAmpm();
+}
+
+function pointerAngle(event){
+  const rect = els.timeDial.getBoundingClientRect();
+  const x = event.clientX - rect.left - rect.width / 2;
+  const y = event.clientY - rect.top - rect.height / 2;
+  return (Math.atan2(y, x) * 180 / Math.PI + 90 + 360) % 360;
+}
+
+function updateDialFromPointer(event){
+  const angle = pointerAngle(event);
+  if(currentMode === "specific"){
+    const halfDay = dialMinutes >= 720 ? 720 : 0;
+    let minutes = Math.round((angle / 360) * 720 / 5) * 5;
+    if(minutes >= 720) minutes = 0;
+    setSpecificFromDial(halfDay + minutes);
+  }else if(currentMode === "interval"){
+    let minutes = Math.round((angle / 360) * 120 / 5) * 5;
+    if(minutes <= 0) minutes = 5;
+    els.intervalUnit.value = "minutes";
+    els.intervalValue.value = minutes;
+  }
+  updateDial();
+}
+
+function render(){
+  els.listCount.textContent = String(reminders.length);
+  els.empty.classList.toggle("hidden", reminders.length > 0);
+  els.list.innerHTML = reminders.map((reminder, index) => {
+    resetDailyCount(reminder);
+    const tone = index % 4 === 1 ? "blue" : index % 4 === 3 ? "coral" : "mint";
+    const enabled = reminder.enabled;
+    return '<article class="reminder-row ' + (enabled ? "" : "off") + '" data-id="' + reminder.id + '" data-tone="' + tone + '">' +
+      '<span class="accent-line" aria-hidden="true"></span>' +
+      '<div class="reminder-main">' +
+        '<div class="reminder-name">' + escapeHtml(reminder.name) + '</div>' +
+        '<div class="reminder-meta">' +
+          '<span class="tag">' + escapeHtml(schedDesc(reminder)) + '</span>' +
+          '<span class="tag blue">fired today: ' + (reminder.firedToday || 0) + '</span>' +
+        '</div>' +
+        '<div class="progress"><i id="progress-' + reminder.id + '"></i></div>' +
+      '</div>' +
+      '<div class="next-cell">' +
+        '<strong id="remaining-' + reminder.id + '">' + (enabled ? fmtRemaining(reminder.nft) : "--") + '</strong>' +
+        '<span id="next-' + reminder.id + '">' + (enabled ? fmtNextLabel(reminder.nft) : "paused") + '</span>' +
+      '</div>' +
+      '<button class="switch ' + (enabled ? "on" : "") + '" data-action="toggle" data-id="' + reminder.id + '" type="button" aria-label="' + (enabled ? "Pause" : "Resume") + ' reminder"></button>' +
+      '<div class="row-tools">' +
+        '<button class="tool-btn" data-action="test" data-id="' + reminder.id + '" type="button">' + icons.play + '<span>Test</span></button>' +
+        '<button class="tool-btn delete" data-action="delete" data-id="' + reminder.id + '" type="button">' + icons.trash + '<span>Delete</span></button>' +
+      '</div>' +
+    '</article>';
+  }).join("");
+  updateCountdowns();
+}
+
+function updateStats(){
+  const active = reminders.filter(reminder => reminder.enabled).length;
+  const today = todayKey();
+  const fired = reminders.reduce((sum, reminder) => {
+    return sum + (reminder.ftDate === today ? Number(reminder.firedToday || 0) : 0);
+  }, 0);
+  const next = reminders.filter(reminder => reminder.enabled && reminder.nft).sort((a,b) => a.nft - b.nft)[0];
+
+  els.activeStat.textContent = String(active);
+  els.firedStat.textContent = String(fired);
+  els.totalStat.textContent = String(reminders.length);
+  els.nextStat.textContent = next ? fmtRemaining(next.nft) : "--";
+  els.nextMini.textContent = next ? fmtRemaining(next.nft) + " - " + escapePlain(next.name) : "No reminders";
+}
+
+function escapePlain(value){
+  return String(value).replace(/\s+/g, " ").slice(0, 32);
+}
+
+function updateCountdowns(){
+  const now = Date.now();
+  reminders.forEach(reminder => {
+    const remaining = document.getElementById("remaining-" + reminder.id);
+    const next = document.getElementById("next-" + reminder.id);
+    const progress = document.getElementById("progress-" + reminder.id);
+    if(remaining) remaining.textContent = reminder.enabled ? fmtRemaining(reminder.nft) : "--";
+    if(next) next.textContent = reminder.enabled ? fmtNextLabel(reminder.nft) : "paused";
+    if(progress){
+      if(!reminder.enabled || !reminder.nft){
+        progress.style.width = "0%";
+      }else{
+        const start = Number(reminder.lastFire || now);
+        const total = Math.max(1, reminder.nft - start);
+        const remain = Math.max(0, reminder.nft - now);
+        progress.style.width = Math.max(0, Math.min(100, remain / total * 100)) + "%";
+      }
+    }
+  });
+}
+
+function chime(){
+  try{
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if(!AudioCtx) return;
+    const ctx = new AudioCtx();
+    [523.25, 659.25, 783.99].forEach((frequency, index) => {
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.type = "sine";
+      oscillator.frequency.value = frequency;
+      const start = ctx.currentTime + index * .13;
+      gain.gain.setValueAtTime(.001, start);
+      gain.gain.exponentialRampToValueAtTime(.2, start + .04);
+      gain.gain.exponentialRampToValueAtTime(.001, start + .42);
+      oscillator.start(start);
+      oscillator.stop(start + .45);
+    });
+  }catch(err){}
+}
+
+function vibrate(){
+  try{
+    if(navigator.vibrate) navigator.vibrate([160, 70, 160]);
+  }catch(err){}
+}
+
+async function fireReminder(reminder, isTest = false){
+  resetDailyCount(reminder);
+  if(!isTest){
+    reminder.firedToday = Number(reminder.firedToday || 0) + 1;
+    scheduleNext(reminder, Date.now() + 250);
+    saveReminders();
+  }
+
+  render();
+  updateStats();
+
+  const row = document.querySelector('[data-id="' + reminder.id + '"]');
+  if(row){
+    row.classList.add("firing");
+    setTimeout(() => row.classList.remove("firing"), 1800);
+  }
+
+  const nativeShown = await showNativeNotification(reminder, isTest);
+  chime();
+  vibrate();
+
+  if(!nativeShown){
+    const title = isTest ? "Test alert" : "Reminder";
+    showToast(title, reminder.name + " - " + schedDesc(reminder));
+  }
+}
+
+async function tick(){
+  if(tickLocked) return;
+  tickLocked = true;
+  try{
+    const now = Date.now();
+    for(const reminder of reminders){
+      if(reminder.enabled && reminder.nft && reminder.nft <= now){
+        await fireReminder(reminder, false);
+      }
+    }
+    updateCountdowns();
+    updateStats();
+  }finally{
+    tickLocked = false;
+  }
+}
+
+function toggleReminder(id){
+  const reminder = reminders.find(item => item.id === id);
+  if(!reminder) return;
+  reminder.enabled = !reminder.enabled;
+  if(reminder.enabled){
+    if(reminder.mode === "random") reminder.rq = generateRandomQueue(reminder, Date.now());
+    scheduleNext(reminder, Date.now());
+  }
+  saveReminders();
+  render();
+  updateStats();
+}
+
+function deleteReminder(id){
+  reminders = reminders.filter(item => item.id !== id);
+  saveReminders();
+  render();
+  updateStats();
+}
+
+function clearReminders(){
+  if(!reminders.length) return;
+  if(confirm("Delete all reminders?")){
+    reminders = [];
+    saveReminders();
+    render();
+    updateStats();
+  }
+}
+
+function setupEvents(){
+  document.querySelectorAll(".mode-tab").forEach(btn => {
+    btn.addEventListener("click", () => setMode(btn.dataset.mode));
+  });
+
+  [
+    els.intervalValue, els.intervalUnit, els.specificTime, els.timesPerDay,
+    els.randomCount, els.randomStart, els.randomEnd, els.periodCount,
+    els.periodDuration, els.periodUnit
+  ].forEach(input => input.addEventListener("input", updateDial));
+
+  els.addBtn.addEventListener("click", addReminder);
+  els.testComposerBtn.addEventListener("click", async () => {
+    if(notificationSupportState() === "default") await requestNativeNotifications();
+    await fireReminder(currentFormReminder(), true);
+  });
+  els.notifyBtn.addEventListener("click", requestNativeNotifications);
+  els.clearBtn.addEventListener("click", clearReminders);
+  els.toastClose.addEventListener("click", hideToast);
+
+  els.ampmGroup.addEventListener("click", event => {
+    const button = event.target.closest("button[data-period]");
+    if(!button) return;
+    const base = dialMinutes % 720;
+    setSpecificFromDial(button.dataset.period === "PM" ? base + 720 : base);
+    if(currentMode !== "specific") setMode("specific");
+  });
+
+  let dragging = false;
+  els.timeDial.addEventListener("pointerdown", event => {
+    dragging = true;
+    els.timeDial.setPointerCapture(event.pointerId);
+    updateDialFromPointer(event);
+  });
+  els.timeDial.addEventListener("pointermove", event => {
+    if(dragging) updateDialFromPointer(event);
+  });
+  els.timeDial.addEventListener("pointerup", event => {
+    dragging = false;
+    els.timeDial.releasePointerCapture(event.pointerId);
+  });
+  els.timeDial.addEventListener("pointercancel", () => {
+    dragging = false;
+  });
+
+  els.list.addEventListener("click", async event => {
+    const button = event.target.closest("[data-action]");
+    if(!button) return;
+    const id = button.dataset.id;
+    if(button.dataset.action === "toggle") toggleReminder(id);
+    if(button.dataset.action === "delete") deleteReminder(id);
+    if(button.dataset.action === "test"){
+      const reminder = reminders.find(item => item.id === id);
+      if(reminder) await fireReminder(reminder, true);
+    }
+  });
+
+  window.addEventListener("beforeinstallprompt", event => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    els.installBtn.classList.remove("hidden");
+  });
+
+  els.installBtn.addEventListener("click", async () => {
+    if(!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    els.installBtn.classList.add("hidden");
+  });
+}
+
+async function init(){
+  setupEvents();
+  dialMinutes = parseTime(els.specificTime.value);
+  updateDial();
+  updateNotificationUI();
+  await registerServiceWorker();
+  await loadReminders();
+  setInterval(tick, 1000);
+}
+
+init();
 </script>
 </body>
 </html>
